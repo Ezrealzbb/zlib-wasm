@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "sourceMap": true,
+        "lib": [
+            "DOM",
+            "ESNext",
+        ],
+        "module": "ESNext",
+        "target": "ESNext",
+        "moduleResolution": "classic",
+        "skipLibCheck": true,
+        "outDir": "./dist",
+        "typeRoots": [
+            "node_modules/@types",
+        ]
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
