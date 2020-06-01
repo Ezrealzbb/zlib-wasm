@@ -30,11 +30,11 @@ export char * _uncompress_gzip(const char * input, int inputLen, const char* out
     int ret = uncompress_gzip(output, &outLen, input, inputLen);
     if (ret == Z_OK)
     {
-      writeToJs2(outLen);
+      writeToJs_uncompress(outLen);
       return Z_OK;
     }
     
-    return outLen;
+    return ret;
 }
 
 
