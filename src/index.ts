@@ -130,3 +130,8 @@
 
 //   return ret;
 // };
+import { ZlibWasmParser } from './ZlibWasm';
+
+window.parser = new ZlibWasmParser({
+  debug: true,
+});

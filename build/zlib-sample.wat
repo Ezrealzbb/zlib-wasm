@@ -2,15 +2,13 @@
  (type $FUNCSIG$iiii (func (param i32 i32 i32) (result i32)))
  (type $FUNCSIG$vii (func (param i32 i32)))
  (type $FUNCSIG$iii (func (param i32 i32) (result i32)))
- (type $FUNCSIG$i (func (result i32)))
- (type $FUNCSIG$v (func))
  (type $FUNCSIG$vi (func (param i32)))
- (type $FUNCSIG$ii (func (param i32) (result i32)))
+ (type $FUNCSIG$v (func))
  (import "env" "_abort" (func $_abort (param i32)))
  (import "env" "_grow" (func $_grow))
  (import "env" "writeToJs" (func $writeToJs (param i32 i32)))
- (import "env" "writeToJs2" (func $writeToJs2 (param i32) (result i32)))
  (import "env" "writeToJs_base64" (func $writeToJs_base64 (param i32 i32)))
+ (import "env" "writeToJs_uncompress" (func $writeToJs_uncompress (param i32)))
  (import "env" "memory" (memory $0 1))
  (table 6 6 anyfunc)
  (elem (i32.const 0) $__wasm_nullptr $zcalloc $zcfree $deflate_stored $deflate_fast $deflate_slow)
@@ -169,29 +167,23 @@
    (get_local $4)
    (get_local $3)
   )
-  (set_local $0
-   (call $uncompress_gzip
-    (get_local $2)
-    (i32.add
-     (get_local $4)
-     (i32.const 12)
-    )
-    (get_local $0)
-    (get_local $1)
-   )
-  )
-  (set_local $2
-   (i32.load offset=12
-    (get_local $4)
-   )
-  )
   (block $label$0
    (br_if $label$0
-    (get_local $0)
+    (tee_local $2
+     (call $uncompress_gzip
+      (get_local $2)
+      (i32.add
+       (get_local $4)
+       (i32.const 12)
+      )
+      (get_local $0)
+      (get_local $1)
+     )
+    )
    )
-   (drop
-    (call $writeToJs2
-     (get_local $2)
+   (call $writeToJs_uncompress
+    (i32.load offset=12
+     (get_local $4)
     )
    )
    (set_local $2

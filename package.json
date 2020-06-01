@@ -7,7 +7,7 @@
   "license": "MIT & zlib",
   "private": false,
   "scripts": {
-    "build:wasm": "node ./bin/build.js",
+    "build:wasm": "node ./bin/build.js && cp  ./build/zlib-sample.wasm ./src/zlib.wasm",
     "build:web": "./node_modules/.bin/webpack --config ./bin/webpack.production.config.js",
     "demo": "node ./bin/server.js"
   },

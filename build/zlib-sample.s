@@ -54,29 +54,30 @@ _uncompress_gzip:
 	.param  	i32, i32, i32, i32
 	.result 	i32
 	.local  	i32
-	i32.const	$push3=, 0
-	i32.const	$push1=, 0
-	i32.load	$push0=, __stack_pointer($pop1)
-	i32.const	$push2=, 16
-	i32.sub 	$push10=, $pop0, $pop2
-	tee_local	$push9=, $4=, $pop10
-	i32.store	__stack_pointer($pop3), $pop9
+	i32.const	$push4=, 0
+	i32.const	$push2=, 0
+	i32.load	$push1=, __stack_pointer($pop2)
+	i32.const	$push3=, 16
+	i32.sub 	$push13=, $pop1, $pop3
+	tee_local	$push12=, $4=, $pop13
+	i32.store	__stack_pointer($pop4), $pop12
 	i32.store	12($4), $3
-	i32.const	$push7=, 12
-	i32.add 	$push8=, $4, $pop7
-	i32.call	$0=, uncompress_gzip@FUNCTION, $2, $pop8, $0, $1
-	i32.load	$2=, 12($4)
 	block   	
-	br_if   	0, $0
-	i32.call	$drop=, writeToJs2@FUNCTION, $2
+	i32.const	$push8=, 12
+	i32.add 	$push9=, $4, $pop8
+	i32.call	$push11=, uncompress_gzip@FUNCTION, $2, $pop9, $0, $1
+	tee_local	$push10=, $2=, $pop11
+	br_if   	0, $pop10
+	i32.load	$push0=, 12($4)
+	call    	writeToJs_uncompress@FUNCTION, $pop0
 	i32.const	$2=, 0
 .LBB4_2:
 	end_block
-	i32.const	$push6=, 0
-	i32.const	$push4=, 16
-	i32.add 	$push5=, $4, $pop4
-	i32.store	__stack_pointer($pop6), $pop5
-	copy_local	$push11=, $2
+	i32.const	$push7=, 0
+	i32.const	$push5=, 16
+	i32.add 	$push6=, $4, $pop5
+	i32.store	__stack_pointer($pop7), $pop6
+	copy_local	$push14=, $2
 	.endfunc
 .Lfunc_end4:
 	.size	_uncompress_gzip, .Lfunc_end4-_uncompress_gzip
@@ -24295,7 +24296,7 @@ available:
 	.ident	"clang version 5.0.0 "
 	.ident	"clang version 5.0.0 "
 	.functype	writeToJs_base64, void, i32, i32
-	.functype	writeToJs2, i32
+	.functype	writeToJs_uncompress, void, i32
 	.functype	writeToJs, void, i32, i32
 	.functype	_grow, void
 	.functype	_abort, void, i32

@@ -16,6 +16,7 @@ module.exports = {
             extensions: ['.wasm', '.ts', '.js'],
         },
         module: {
+            noParse: /\.wasm$/,
             rules: [
                 {
                     test: /\.js$/,
@@ -31,6 +32,15 @@ module.exports = {
                         loader: 'ts-loader',
                         options: {
                             configFile: path.resolve(baseRoot, 'tsconfig.json'),
+                        }
+                    }]
+                },
+                {
+                    test: /\.wasm$/,
+                    use: [{
+                        loader: 'base64-loader',
+                        options: {
+                            type: 'javascript/auto',
                         }
                     }]
                 }

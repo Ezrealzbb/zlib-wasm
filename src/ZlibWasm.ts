@@ -48,7 +48,7 @@ export class ZlibWasmParser {
   private async init() {
 
     try {
-      this.memory = new  WebAssembly.Memory({
+      this.memory = new WebAssembly.Memory({
         // 以页(64k) 为单位 
         initial: DEFAULT_INITIAL_MEMORY_PAGES,
       });
@@ -60,6 +60,7 @@ export class ZlibWasmParser {
         jsLog: this.wasmLog,
       }
   
+      // const zlibWasm = await import('./zlib.wasm');
       const module = await WebAssembly.compile(zlibWasm);
       const instance = await WebAssembly.instantiate(module, {
         env: importEnv,
@@ -71,11 +72,9 @@ export class ZlibWasmParser {
         this.loadState = LoadState.READY;
         this.instanceExports = instance.exports as InstaceExports;
       } else {
-
+        this.loadState = LoadState.ERROR;
       }
 
-      
-      
     } catch (ex) {
       console.error(ex);
       this.loadState = LoadState.ERROR;
@@ -129,6 +128,10 @@ export class ZlibWasmParser {
   
   ungzipBase64() {
 
+  }
+
+  isReady() {
+    return this.loadState === LoadState.READY;
   }
   
 
