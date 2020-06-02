@@ -16,6 +16,7 @@ export interface ZlibWasmOptions {
 export interface InstaceExports extends WebAssembly.Exports {
     _free: (ptr: number) => void;
     _malloc: (size: number) => number;
-    _base64_decode: (inputPtr: number, inputLen: number, outPtr: number) => void;
+    _base64_decode: (inputPtr: number, inputLen: number, outLen: number) => number;
     _uncompress_gzip: (inputPtr: number, inputLen: number, outPtr: number, outLen: number) => number;
+    _compress_bounds: (size: number) => number;
 }

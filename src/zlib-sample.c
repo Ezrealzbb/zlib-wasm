@@ -16,6 +16,7 @@ export void _free(void *p) {
 export char* _base64_decode(unsigned char* src, size_t inputLen, size_t * outLen) {
   char * out = base64_decode(src, inputLen, outLen);
   writeToJs_base64(out, outLen);
+  return out;
 }
 
 export char* _base64_encode(unsigned char* src, size_t inputLen, size_t * outLen) {
@@ -23,7 +24,9 @@ export char* _base64_encode(unsigned char* src, size_t inputLen, size_t * outLen
   writeToJs_base64(out, outLen);
 }
 
-
+export int _compress_bound(size_t size) {
+  return compressBound(size);
+}
 
 export char * _uncompress_gzip(const char * input, int inputLen, const char* output, int outLen) {
 

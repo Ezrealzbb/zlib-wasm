@@ -74,6 +74,7 @@
  (export "_free" (func $_free))
  (export "_base64_decode" (func $_base64_decode))
  (export "_base64_encode" (func $_base64_encode))
+ (export "_compress_bound" (func $_compress_bound))
  (export "_uncompress_gzip" (func $_uncompress_gzip))
  (export "_createDeflateContext" (func $_createDeflateContext))
  (export "_createDeflateContext_gzip" (func $_createDeflateContext_gzip))
@@ -85,6 +86,7 @@
  (export "_freeInflateContext" (func $_freeInflateContext))
  (export "base64_encode" (func $base64_encode))
  (export "base64_decode" (func $base64_decode))
+ (export "compressBound" (func $compressBound))
  (export "deflateInit2_" (func $deflateInit2_))
  (export "zcalloc" (func $zcalloc))
  (export "zcfree" (func $zcfree))
@@ -130,14 +132,16 @@
  )
  (func $_base64_decode (param $0 i32) (param $1 i32) (param $2 i32) (result i32)
   (call $writeToJs_base64
-   (call $base64_decode
-    (get_local $0)
-    (get_local $1)
-    (get_local $2)
+   (tee_local $0
+    (call $base64_decode
+     (get_local $0)
+     (get_local $1)
+     (get_local $2)
+    )
    )
    (get_local $2)
   )
-  (get_local $2)
+  (get_local $0)
  )
  (func $_base64_encode (param $0 i32) (param $1 i32) (param $2 i32) (result i32)
   (call $writeToJs_base64
@@ -149,6 +153,11 @@
    (get_local $2)
   )
   (get_local $2)
+ )
+ (func $_compress_bound (param $0 i32) (result i32)
+  (call $compressBound
+   (get_local $0)
+  )
  )
  (func $_uncompress_gzip (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32) (result i32)
   (local $4 i32)
@@ -1275,6 +1284,30 @@
    )
   )
   (get_local $9)
+ )
+ (func $compressBound (param $0 i32) (result i32)
+  (i32.add
+   (i32.add
+    (i32.add
+     (i32.add
+      (get_local $0)
+      (i32.shr_u
+       (get_local $0)
+       (i32.const 12)
+      )
+     )
+     (i32.shr_u
+      (get_local $0)
+      (i32.const 14)
+     )
+    )
+    (i32.shr_u
+     (get_local $0)
+     (i32.const 25)
+    )
+   )
+   (i32.const 13)
+  )
  )
  (func $deflateInit2_ (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32) (param $4 i32) (param $5 i32) (param $6 i32) (param $7 i32) (result i32)
   (local $8 i32)

@@ -126,8 +126,59 @@ export class ZlibWasmParser {
   }
 
   
-  ungzipBase64() {
+  ungzipBase64(base64Text: string) {
+    // 将text转换为 ArrayBuffer
+    const textBuff = this.encoder.encode(base64Text);
+    
+    // 在线性内存中分配，得到数据指针的起始位置
+    this.base64Ptr = this.instanceExports._malloc(textBuff.byteLength);
 
+    // 赋值内存
+    const emptyBuff = new Uint8Array(this.memory.buffer, this.base64Ptr, textBuff.byteLength);
+    emptyBuff.set(textBuff);
+
+    // 执行base64 解码，得到原始的二进制数据
+    // 解压之后的二进制长度应该是原始长度的 3/4
+    const outPtr = this.instanceExports._base64_decode(this.base64Ptr, textBuff.byteLength, textBuff.byteLength * (3 / 4));
+
+    let base64DecodeBuff;
+
+    // 解码失败，走 Buffer的解码
+    if (!outPtr) {
+      base64DecodeBuff = Buffer.from(base64Text, 'base64');
+      this.inputByteLength = base64DecodeBuff.byteLength;
+      this.inputPtr = this.instanceExports._malloc(this.inputByteLength);
+    } else {
+      this.inputPtr = outPtr;
+      this.inputByteLength = this.base64ByteLength;
+    }
+
+    // 默认传入最大内存
+    this.outputByteLength = this.instanceExports._compress_bounds(this.inputByteLength);
+    this.outputPtr = this.instanceExports._malloc(this.outputByteLength);
+    
+
+    // 开始解压
+    const ret = this.instanceExports._uncompress_gzip(
+      this.inputPtr,
+      this.inputByteLength,
+      this.outputPtr,
+      this.outputByteLength,
+    );
+
+    if (ret != 0) {
+      console.warn(`[ZlibWasm] wasm ungzip fail with code ${ret}, using pako instead`);
+      this.reset();
+      return this.pakoUngzip(base64Text);
+    }
+
+    const outputBuff = this.memory.buffer.slice(this.outputPtr, this.outputByteLength);
+    const outputText = this.decoder.decode(outputBuff);
+    return outputText;
+  }
+
+  pakoUngzip(base64Text: string) {
+    
   }
 
   isReady() {
