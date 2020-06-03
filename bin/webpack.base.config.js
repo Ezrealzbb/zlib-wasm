@@ -19,17 +19,19 @@ module.exports = {
         module: {
             noParse: /\.wasm$/,
             rules: [
-                {
-                    test: /\.js$/,
-                    exclude: /(node_modules)/,
-                    use: {
-                        loader: 'babel-loader',
-                    }
-                },
+                // {
+                //     test: /\.js$/,
+                //     exclude: /(node_modules)/,
+                //     use: {
+                //         loader: 'babel-loader',
+                //     }
+                // },
                 {
                     test: /\.ts$/,
                     exclude: /(node_modules)/,
                     use: [{
+                        loader: 'babel-loader',
+                    }, {
                         loader: 'ts-loader',
                         options: {
                             configFile: path.resolve(baseRoot, 'tsconfig.json'),
