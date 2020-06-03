@@ -132,6 +132,6 @@
 // };
 import { ZlibWasmParser } from './ZlibWasm';
 
-window.parser = new ZlibWasmParser({
+(window as any).parser = new ZlibWasmParser({
   debug: true,
 });

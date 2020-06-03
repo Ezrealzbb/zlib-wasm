@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import zlibWasm from './zlib.wasm';
+// import zlibWasm from './zlib.wasm';
 import { isNative } from 'lodash-es';
 import { LoadState, ZlibWasmOptions, InstaceExports } from './types';
 import { TextDecodeParser, TextEncodeParser } from './TextParser';
@@ -61,8 +61,10 @@ export class ZlibWasmParser {
       }
   
       // const zlibWasm = await import('./zlib.wasm');
-      const module = await WebAssembly.compile(zlibWasm);
-      const instance = await WebAssembly.instantiate(module, {
+      const zlibWasm = await import('./zlib.wasm');
+      // @ts-ignore
+      // const module = await WebAssembly.compile(zlibWasm);
+      const instance: WebAssembly.Instance = await WebAssembly.instantiate(zlibWasm, {
         env: importEnv,
       });
 

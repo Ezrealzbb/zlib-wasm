@@ -4,6 +4,7 @@ const srcFolder = path.resolve(baseRoot, 'src');
 const demoFolder = path.resolve(baseRoot, 'demo');
 const distFolder = path.resolve(baseRoot, 'dist');
 const binFolder = path.resolve(baseRoot, 'bin');
+console.log(baseRoot, srcFolder);
 
 module.exports = {
     baseRoot,
@@ -37,12 +38,14 @@ module.exports = {
                 },
                 {
                     test: /\.wasm$/,
-                    use: [{
-                        loader: 'base64-loader',
-                        options: {
-                            type: 'javascript/auto',
-                        }
-                    }]
+                    // type: "webassembly/async",
+                    type: "webassembly/experimental"
+                    // use: [{
+                    //     loader: 'base64-loader',
+                    //     options: {
+                    //         type: 'javascript/auto',
+                    //     }
+                    // }]
                 }
             ]
         }
