@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-// import zlibWasm from './zlib.wasm';
+import zlibWasm from './zlib.wasm';
 import { isNative } from 'lodash-es';
 import { LoadState, ZlibWasmOptions, InstaceExports } from './types';
 import { TextDecodeParser, TextEncodeParser } from './TextParser';
@@ -55,16 +55,22 @@ export class ZlibWasmParser {
   
       const importEnv = {
         memory: this.memory,
-        writeToJs_uncompress: this.recordUncompress,
-        writeToJs_base64: this.recordBase64,
+        writeToJs: () => { },
+        writeToJs_uncompress: this.recordUncompress.bind(this),
+        writeToJs_base64: this.recordBase64.bind(this),
         jsLog: this.wasmLog,
+        _abort: console.error,
+        _grow: () => true,
       }
   
       // const zlibWasm = await import('./zlib.wasm');
-      const zlibWasm = await import('./zlib.wasm');
+      // const zlibWasm = await import('./zlib.wasm');
+      // console.log('sheet', zlibWasm);
+      // console.log(await loadWasm());
       // @ts-ignore
-      // const module = await WebAssembly.compile(zlibWasm);
-      const instance: WebAssembly.Instance = await WebAssembly.instantiate(zlibWasm, {
+      const module = await WebAssembly.compile(Buffer.from(zlibWasm, 'base64'));
+      // return;
+      const instance: WebAssembly.Instance = await WebAssembly.instantiate(module, {
         env: importEnv,
       });
 
@@ -156,7 +162,7 @@ export class ZlibWasmParser {
     }
 
     // 默认传入最大内存
-    this.outputByteLength = this.instanceExports._compress_bounds(this.inputByteLength);
+    this.outputByteLength = this.instanceExports._compress_bound(this.inputByteLength);
     this.outputPtr = this.instanceExports._malloc(this.outputByteLength);
     
 
@@ -193,7 +199,7 @@ export class ZlibWasmParser {
    * 判断兼容性
    */
   static isSupportWasm(): boolean {
-    return isNative(window.WebAssembly);
+    return window.WebAssembly && isNative(window.WebAssembly.compile);
   }
 
 }

@@ -1,1 +1,3 @@
-console.log('dassddasdasd dasdsadd');
+import { ZlibWasmParser } from './ZlibWasm';
+
+window.zlib = new ZlibWasmParser({ debug: true });

@@ -14,7 +14,7 @@ module.exports = {
     binFolder,
     config: {
         resolve: {
-            extensions: ['.wasm', '.ts', '.js'],
+            extensions: [ '.ts', '.js'],
         },
         module: {
             noParse: /\.wasm$/,
@@ -38,16 +38,27 @@ module.exports = {
                         }
                     }]
                 },
+                // {
+                //     test: /\.wasm$/,
+                //     // type: "webassembly/async",
+                //     // type: "webassembly/experimental"
+                //     use: [{
+                //         loader: 'base64-loader',
+                //         options: {
+                //             type: 'javascript/auto',
+                //         }
+                //     }]
+                // }
                 {
                     test: /\.wasm$/,
-                    // type: "webassembly/async",
-                    type: "webassembly/experimental"
-                    // use: [{
-                    //     loader: 'base64-loader',
-                    //     options: {
-                    //         type: 'javascript/auto',
-                    //     }
-                    // }]
+                    // Tells WebPack that this module should be included as
+                    // base64-encoded binary file and not as code
+                    loaders: ['base64-loader'],
+                    // Disables WebPack's opinion where WebAssembly should be,
+                    // makes it think that it's not WebAssembly
+                    //
+                    // Error: WebAssembly module is included in initial chunk.
+                    type: 'javascript/auto'
                 }
             ]
         }
