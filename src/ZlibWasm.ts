@@ -197,7 +197,7 @@ export class ZlibWasmParser {
   
   timeRecord(label: TimeRecordLabel) {
     if (this.debug) {
-      console.time(`[zlibwasm]: ${label}`);
+      console.time(`[zlibwasm] ${label}`);
     }
   }
 

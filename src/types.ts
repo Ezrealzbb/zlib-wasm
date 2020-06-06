@@ -16,8 +16,8 @@ export interface ZlibWasmOptions {
 
 export enum TimeRecordLabel {
     BASE64 = 'BASE64',
-    WASM_UNGZIP = 'WASM_UNGZIP',
-    PAKO_UNGZIP = 'PAKO_UNGZIP',
+    WASM_UNGZIP = 'wasm_ungzip',
+    PAKO_UNGZIP = 'pako_ungzip',
 }
 
 export interface InstaceExports extends WebAssembly.Exports {
