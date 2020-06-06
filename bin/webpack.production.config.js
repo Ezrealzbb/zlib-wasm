@@ -1,4 +1,5 @@
 const path = require('path');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const {
     srcFolder,
     distFolder,
@@ -7,7 +8,7 @@ const {
 const merge = require('webpack-merge');
 
 module.exports = merge(config, {
-    entry: path.resolve(srcFolder, 'index.ts'),
+    entry: path.resolve(srcFolder, 'index.js'),
     devtool: 'srouce-map',
     mode: 'production',
     output: {
@@ -15,4 +16,7 @@ module.exports = merge(config, {
         path: distFolder,
         libraryTarget: 'umd',
     },
-})
+    plugins: [
+        new BundleAnalyzerPlugin(),
+    ],
+});

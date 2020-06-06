@@ -19,13 +19,6 @@ module.exports = {
         module: {
             noParse: /\.wasm$/,
             rules: [
-                // {
-                //     test: /\.js$/,
-                //     exclude: /(node_modules)/,
-                //     use: {
-                //         loader: 'babel-loader',
-                //     }
-                // },
                 {
                     test: /\.ts$/,
                     exclude: /(node_modules)/,
@@ -38,17 +31,6 @@ module.exports = {
                         }
                     }]
                 },
-                // {
-                //     test: /\.wasm$/,
-                //     // type: "webassembly/async",
-                //     // type: "webassembly/experimental"
-                //     use: [{
-                //         loader: 'base64-loader',
-                //         options: {
-                //             type: 'javascript/auto',
-                //         }
-                //     }]
-                // }
                 {
                     test: /\.wasm$/,
                     // Tells WebPack that this module should be included as

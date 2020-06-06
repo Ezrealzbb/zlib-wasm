@@ -9,6 +9,7 @@
         "target": "es5",
         "moduleResolution": "classic",
         "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
         "outDir": "./dist",
         "typeRoots": [
             "node_modules/@types",

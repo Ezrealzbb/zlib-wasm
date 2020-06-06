@@ -1,4 +1,4 @@
 declare module '*.wasm' {
-    const content: ArrayBuffer;
+    const content: string;
     export default content;
 }
