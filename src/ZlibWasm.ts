@@ -113,15 +113,30 @@ export class ZlibWasmParser {
     return true;
   }
 
+
+  private timeRecord(label: TimeRecordLabel) {
+    if (this.debug) {
+      console.time(`[zlibwasm] ${label}`);
+    }
+  }
+
+  private timeRecordEnd(label: TimeRecordLabel) {
+    if (this.debug) {
+      console.timeEnd(`[zlibwasm] ${label}`);
+    }
+  }
+
   /**
    * 释放内存
    */
   private reset() {
     if (this.inputPtr) {
       this.instanceExports._free(this.inputPtr);
+      this.inputPtr = 0;
     }
     if (this.outputPtr) {
       this.instanceExports._free(this.outputPtr);
+      this.outputPtr = 0;
     }
     this.inputByteLength = 0;
     this.outputByteLength = 0;
@@ -131,7 +146,14 @@ export class ZlibWasmParser {
 
   
   ungzipBase64(base64Text: string) {
+
+    if (!this.isReady()) {
+      return this.pakoUngzip(base64Text);
+    }
+
     this.timeRecord(TimeRecordLabel.WASM_UNGZIP);
+    this.reset();
+
     // 将text转换为 ArrayBuffer
     const textBuff = this.encoder.encode(base64Text);
     
@@ -193,18 +215,6 @@ export class ZlibWasmParser {
 
   isReady() {
     return this.loadState === LoadState.READY;
-  }
-  
-  timeRecord(label: TimeRecordLabel) {
-    if (this.debug) {
-      console.time(`[zlibwasm] ${label}`);
-    }
-  }
-
-  timeRecordEnd(label: TimeRecordLabel) {
-    if (this.debug) {
-      console.timeEnd(`[zlibwasm] ${label}`);
-    }
   }
   
   /**
