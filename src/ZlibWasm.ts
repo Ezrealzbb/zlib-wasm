@@ -10,6 +10,7 @@ import {
   DeflateLevel, 
   ReturnCodes,
   Pointer,
+  TimeRecordMaps,
 } from './types';
 import { TextDecodeParser, TextEncodeParser } from './TextParser';
 import { isNULLPtr } from './util';
@@ -22,10 +23,14 @@ export class ZlibWasmParser {
 
   private memory: WebAssembly.Memory;
   private instanceExports: InstaceExports;
+  // debug 用
+  private pako;
+  private buff;
 
   // 加载状态
   private loadState: LoadState;
   private debug: boolean;
+  private timeMaps: TimeRecordMaps = {} as TimeRecordMaps;
 
   // 将 base64 字符编译为 ArrayBuffer，默认是 window.TextEncoder
   private encoder = new TextEncodeParser;
@@ -45,6 +50,11 @@ export class ZlibWasmParser {
     const { debug } = options;
 
     this.debug = debug;
+
+    if (debug) {
+      this.pako = pako;
+      this.buff = Buffer;
+    }
 
     if (ZlibWasmParser.isSupportWasm()) {
       this.loadState = LoadState.LOADING;
@@ -124,14 +134,15 @@ export class ZlibWasmParser {
 
 
   private timeRecord(label: TimeRecordLabel) {
-    if (this.debug) {
-      console.time(`[zlibwasm] ${label}`);
+    if (this.debug && label) {
+      this.timeMaps[label] = window.performance.now();
     }
   }
 
   private timeRecordEnd(label: TimeRecordLabel) {
-    if (this.debug) {
-      console.timeEnd(`[zlibwasm] ${label}`);
+    if (this.debug && label && this.timeMaps[label]) {
+      console.log(`[zlibwasm] time performance ${label}: ${ window.performance.now() - this.timeMaps[label] }ms`);
+      this.timeMaps[label] = 0;
     }
   }
 
@@ -190,7 +201,6 @@ export class ZlibWasmParser {
     }
 
     // 默认传入最大内存
-    // this.outputByteLength = this.instanceExports._compress_bound(this.inputByteLength);
     this.outputByteLength = this.memory.buffer.byteLength;
     this.outputPtr = this.instanceExports._malloc(this.outputByteLength);
 
@@ -224,7 +234,7 @@ export class ZlibWasmParser {
     return ret;
   }
 
-  gzipBase64(text: string, level: DeflateLevel = DEFAULT_COMPRESSION_LEVEL): string {
+  gzip(text: string, level: DeflateLevel = DEFAULT_COMPRESSION_LEVEL): string {
     if (!this.isReady()) {
       return this.pakoGzip(text, level);
     }
@@ -245,7 +255,10 @@ export class ZlibWasmParser {
     emptyBuff.set(textBuff);
 
     // 计算压缩之后的最大可能大小
-    this.outputByteLength = this.instanceExports._compress_bound(this.inputByteLength);
+    // 经过网友测试，在 best_compress(9) 的模式下，由随机字符构成的原串，压缩输出串有可能比原串长度大
+    // 由随机字符构成的原串，长度在 0-40k 情况下，output_buffer_size / compressBound() * 100 最大为 133.33（best_compress 和 best_speed 下此值一样）
+    // 为保证输出缓冲区足够大，缓冲区大小设置为 compressBound() * 2
+    this.outputByteLength = this.instanceExports._compress_bound(this.inputByteLength) * 2;
     this.outputPtr = this.instanceExports._malloc(this.outputByteLength);
 
     if (isNULLPtr(this.inputPtr) || isNULLPtr(this.outputPtr)) {
@@ -264,7 +277,7 @@ export class ZlibWasmParser {
 
     if (ret !== ReturnCodes.Z_OK) {
       console.warn(`[zlibwasm] wasm gzip fail with code ${ret}, using pako instead`);
-      return this.pakoUngzip(text);
+      return this.pakoGzip(text);
     }
 
     // 将压缩之后的 ArrayBuff 转换为 base64 字符

@@ -32,6 +32,10 @@ export enum TimeRecordLabel {
     PAKO_GZIP = 'pako_gzip',
 }
 
+export type TimeRecordMaps = {
+    [key in TimeRecordLabel]: number;
+}
+
 export interface InstaceExports extends WebAssembly.Exports {
     _free: (ptr: Pointer) => void;
     _malloc: (size: number) => Pointer;
