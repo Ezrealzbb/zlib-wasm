@@ -17,6 +17,6 @@ module.exports = merge(config, {
         libraryTarget: 'umd',
     },
     plugins: [
-        new BundleAnalyzerPlugin(),
+        // new BundleAnalyzerPlugin(),
     ],
 });

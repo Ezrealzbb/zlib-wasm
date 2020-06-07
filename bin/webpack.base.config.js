@@ -1,10 +1,11 @@
 const path = require('path');
 const baseRoot = path.resolve(__dirname, '../');
 const srcFolder = path.resolve(baseRoot, 'src');
+const baseFunctionsFolder = path.resolve(srcFolder, 'baseFunctions');
+const webFunctionsFolder = path.resolve(srcFolder, 'webFunctions');
 const demoFolder = path.resolve(baseRoot, 'demo');
 const distFolder = path.resolve(baseRoot, 'dist');
 const binFolder = path.resolve(baseRoot, 'bin');
-console.log(baseRoot, srcFolder);
 
 module.exports = {
     baseRoot,
@@ -12,6 +13,8 @@ module.exports = {
     demoFolder,
     distFolder,
     binFolder,
+    baseFunctionsFolder,
+    webFunctionsFolder,
     config: {
         resolve: {
             extensions: [ '.ts', '.js'],

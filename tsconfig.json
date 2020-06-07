@@ -7,9 +7,10 @@
         ],
         "module": "esNext",
         "target": "es5",
-        "moduleResolution": "classic",
+        "moduleResolution": "Node",
         "skipLibCheck": true,
         "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
         "outDir": "./dist",
         "typeRoots": [
             "node_modules/@types",
