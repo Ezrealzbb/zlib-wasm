@@ -2,7 +2,7 @@
 
 void writeToJs(void *ptr, size_t size);
 void writeToJs_base64(void *ptr, size_t size);
-void writeToJs_uncompress(size_t size);
+void writeToJs_gzip(size_t size);
 
 int jsLog(int a, int b);
 

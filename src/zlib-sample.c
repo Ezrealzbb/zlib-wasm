@@ -28,16 +28,25 @@ export int _compress_bound(size_t size) {
   return compressBound(size);
 }
 
-export char * _uncompress_gzip(const char * input, int inputLen, const char* output, int outLen) {
+export int _uncompress_gzip(const char * input, int inputLen, const char* output, int outLen) {
 
     int ret = uncompress_gzip(output, &outLen, input, inputLen);
     if (ret == Z_OK)
     {
-      writeToJs_uncompress(outLen);
+      writeToJs_gzip(outLen);
       return Z_OK;
     }
     
     return ret;
+}
+
+export int _compress_gzip(const char * input, int inputlen, const char* output, int outlen, int level) {
+  int ret = compress_gzip(output, &outlen, input, inputlen, level);
+  if (ret == Z_OK) {
+    writeToJs_gzip(outlen);
+    return Z_OK;
+  }
+  return ret;
 }
 
 

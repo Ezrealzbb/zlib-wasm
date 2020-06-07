@@ -2,8 +2,9 @@ import { Buffer } from 'buffer';
 import pako from 'pako';
 import zlibWasm from './zlib.wasm';
 import { isNative } from 'lodash-es';
-import { LoadState, ZlibWasmOptions, InstaceExports, TimeRecordLabel } from './types';
+import { LoadState, ZlibWasmOptions, InstaceExports, TimeRecordLabel, DeflateLevel } from './types';
 import { TextDecodeParser, TextEncodeParser } from './TextParser';
+import { isNULLPtr } from './util';
 
 const DEFAULT_COMPRESSION_LEVEL = 9;
 const DEFAULT_INITIAL_MEMORY_PAGES = 10;
@@ -57,7 +58,7 @@ export class ZlibWasmParser {
       const importEnv = {
         memory: this.memory,
         writeToJs: () => { },
-        writeToJs_uncompress: this.recordUncompress.bind(this),
+        writeToJs_gzip: this.recordGzip.bind(this),
         writeToJs_base64: this.recordBase64.bind(this),
         jsLog: this.wasmLog,
         _abort: console.error,
@@ -93,7 +94,7 @@ export class ZlibWasmParser {
     this.base64ByteLength = size;
   }
 
-  private recordUncompress(size: number) {
+  private recordGzip(size: number) {
     this.outputByteLength = size;
   }
 
@@ -184,7 +185,10 @@ export class ZlibWasmParser {
     // this.outputByteLength = this.instanceExports._compress_bound(this.inputByteLength);
     this.outputByteLength = this.memory.buffer.byteLength;
     this.outputPtr = this.instanceExports._malloc(this.outputByteLength);
-    
+
+    if (isNULLPtr(this.inputPtr) || isNULLPtr(this.outputPtr)) {
+      return this.pakoUngzip(base64Text);
+    }
 
     // 开始解压
     const ret = this.instanceExports._uncompress_gzip(
@@ -213,10 +217,59 @@ export class ZlibWasmParser {
     return ret;
   }
 
+  gzipBase64(text: string, level: DeflateLevel = DEFAULT_COMPRESSION_LEVEL): string {
+    if (!this.isReady()) {
+      return this.pakoGzip(text, level);
+    }
+
+    this.timeRecord(TimeRecordLabel.WASM_GZIP);
+    this.reset();
+
+    // 将text转换为 ArrayBuffer
+    const textBuff = this.encoder.encode(text);
+    
+    // 在线性内存中分配，得到数据指针的起始位置
+    this.inputPtr = this.instanceExports._malloc(textBuff.byteLength);
+
+    this.inputByteLength = textBuff.byteLength;
+
+    // 赋值内存
+    const emptyBuff = new Uint8Array(this.memory.buffer, this.inputPtr, textBuff.byteLength);
+    emptyBuff.set(textBuff);
+
+    // 计算压缩之后的最大可能大小
+    this.outputByteLength = this.instanceExports._compress_bound(this.inputByteLength);
+    this.outputPtr = this.instanceExports._malloc(this.outputByteLength);
+
+    if (isNULLPtr(this.inputPtr) || isNULLPtr(this.outputPtr)) {
+      this.timeRecordEnd(TimeRecordLabel.WASM_GZIP);
+      return this.pakoGzip(text, level);
+    }
+
+    // 开始执行压缩
+    const ret = this.instanceExports._compress_gzip(
+      this.inputPtr,
+      this.inputByteLength,
+      this.outputPtr,
+      this.outputByteLength,
+      level,
+    );
+
+    this.timeRecordEnd(TimeRecordLabel.WASM_GZIP);
+    return
+  }
+
+  pakoGzip(text: string, level: DeflateLevel): string {
+    this.timeRecord(TimeRecordLabel.PAKO_GZIP);
+    const ret = Buffer.from(pako.gzip(text, { level })).toString('base64');
+    this.timeRecordEnd(TimeRecordLabel.PAKO_GZIP);
+    return ret;
+  }
+
   isReady() {
     return this.loadState === LoadState.READY;
   }
-  
+
   /**
    * 判断兼容性
    */
