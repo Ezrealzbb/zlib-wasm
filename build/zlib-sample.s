@@ -41,9 +41,10 @@ _base64_decode:
 _base64_encode:
 	.param  	i32, i32, i32
 	.result 	i32
-	i32.call	$push0=, base64_encode@FUNCTION, $0, $1, $2
+	i32.call	$push1=, base64_encode@FUNCTION, $0, $1, $2
+	tee_local	$push0=, $0=, $pop1
 	call    	writeToJs_base64@FUNCTION, $pop0, $2
-	copy_local	$push1=, $2
+	copy_local	$push2=, $0
 	.endfunc
 .Lfunc_end3:
 	.size	_base64_encode, .Lfunc_end3-_base64_encode

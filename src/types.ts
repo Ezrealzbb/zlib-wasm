@@ -7,11 +7,21 @@ export enum LoadState {
 
 export type DeflateLevel = -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
+export type Pointer = number;
+
+// zlib 定义的错误码
+export enum ReturnCodes {
+    Z_OK = 0,
+    Z_STREAM_END = 1,
+    Z_NEED_DICT = 2,
+    Z_ERRNO = -1,
+    Z_STREAM_ERROR = -2,
+    Z_DATA_ERROR = -3,
+    Z_BUF_ERROR = -5,
+}
+
 export interface ZlibWasmOptions {
     debug: boolean;
-    // loadWasm: () => void;
-    // reporter: ({ key:  })
-    // logger: 
 }
 
 export enum TimeRecordLabel {
@@ -23,12 +33,13 @@ export enum TimeRecordLabel {
 }
 
 export interface InstaceExports extends WebAssembly.Exports {
-    _free: (ptr: number) => void;
-    _malloc: (size: number) => number;
-    _base64_decode: (inputPtr: number, inputLen: number, outLen: number) => number;
-    _uncompress_gzip: (inputPtr: number, inputLen: number, outPtr: number, outLen: number) => number;
+    _free: (ptr: Pointer) => void;
+    _malloc: (size: number) => Pointer;
+    _base64_decode: (inputPtr: Pointer, inputLen: number, outLen: number) => Pointer;
+    _base64_encode: (inputPtr: Pointer, inputLen: number, outLen: number) => Pointer;
+    _uncompress_gzip: (inputPtr: Pointer, inputLen: number, outPtr: Pointer, outLen: number) => ReturnCodes;
     _compress_bound: (size: number) => number;
-    _compress_gzip: (inputPtr: number, inputLen: number, outPtr: number, outLen: number, level: number) => number;
+    _compress_gzip: (inputPtr: Pointer, inputLen: number, outPtr: Pointer, outLen: number, level: DeflateLevel) => ReturnCodes;
     _abort: () => void;
     _grow: () => void;
 }

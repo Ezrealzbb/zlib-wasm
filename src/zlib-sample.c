@@ -22,6 +22,7 @@ export char* _base64_decode(unsigned char* src, size_t inputLen, size_t * outLen
 export char* _base64_encode(unsigned char* src, size_t inputLen, size_t * outLen) {
   char * out = base64_encode(src, inputLen, outLen);
   writeToJs_base64(out, outLen);
+  return out;
 }
 
 export int _compress_bound(size_t size) {

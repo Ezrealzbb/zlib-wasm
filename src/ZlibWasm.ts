@@ -2,7 +2,15 @@ import { Buffer } from 'buffer';
 import pako from 'pako';
 import zlibWasm from './zlib.wasm';
 import { isNative } from 'lodash-es';
-import { LoadState, ZlibWasmOptions, InstaceExports, TimeRecordLabel, DeflateLevel } from './types';
+import {
+  LoadState,
+  ZlibWasmOptions,
+  InstaceExports,
+  TimeRecordLabel, 
+  DeflateLevel, 
+  ReturnCodes,
+  Pointer,
+} from './types';
 import { TextDecodeParser, TextEncodeParser } from './TextParser';
 import { isNULLPtr } from './util';
 
@@ -24,12 +32,12 @@ export class ZlibWasmParser {
   // 将 ArrayBuffer 转化为字符，默认是 window.TextDecoder
   private decoder = new TextDecodeParser;
 
-  private base64Ptr: number = 0;
+  private base64Ptr: Pointer = 0;
   private base64ByteLength: number = 0;
   
-  private inputPtr: number = 0;
+  private inputPtr: Pointer = 0;
   private inputByteLength: number = 0;
-  private outputPtr: number = 0;
+  private outputPtr: Pointer = 0;
   private outputByteLength: number = 0;
   
 
@@ -198,9 +206,8 @@ export class ZlibWasmParser {
       this.outputByteLength,
     );
 
-    if (ret != 0) {
+    if (ret !== ReturnCodes.Z_OK) {
       console.warn(`[zlibwasm] wasm ungzip fail with code ${ret}, using pako instead`);
-      this.reset();
       return this.pakoUngzip(base64Text);
     }
 
@@ -255,11 +262,21 @@ export class ZlibWasmParser {
       level,
     );
 
+    if (ret !== ReturnCodes.Z_OK) {
+      console.warn(`[zlibwasm] wasm gzip fail with code ${ret}, using pako instead`);
+      return this.pakoUngzip(text);
+    }
+
+    // 将压缩之后的 ArrayBuff 转换为 base64 字符
+    this.instanceExports._base64_encode(this.outputPtr, this.outputByteLength, this.outputByteLength * 4 / 3);
+    const outputBuff = this.memory.buffer.slice(this.base64Ptr, this.base64Ptr + this.base64ByteLength);
+    const outputText = this.decoder.decode(outputBuff);
+
     this.timeRecordEnd(TimeRecordLabel.WASM_GZIP);
-    return
+    return outputText;
   }
 
-  pakoGzip(text: string, level: DeflateLevel): string {
+  pakoGzip(text: string, level: DeflateLevel = DEFAULT_COMPRESSION_LEVEL): string {
     this.timeRecord(TimeRecordLabel.PAKO_GZIP);
     const ret = Buffer.from(pako.gzip(text, { level })).toString('base64');
     this.timeRecordEnd(TimeRecordLabel.PAKO_GZIP);

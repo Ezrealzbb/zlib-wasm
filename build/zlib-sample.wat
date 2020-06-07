@@ -149,14 +149,16 @@
  )
  (func $_base64_encode (param $0 i32) (param $1 i32) (param $2 i32) (result i32)
   (call $writeToJs_base64
-   (call $base64_encode
-    (get_local $0)
-    (get_local $1)
-    (get_local $2)
+   (tee_local $0
+    (call $base64_encode
+     (get_local $0)
+     (get_local $1)
+     (get_local $2)
+    )
    )
    (get_local $2)
   )
-  (get_local $2)
+  (get_local $0)
  )
  (func $_compress_bound (param $0 i32) (result i32)
   (call $compressBound
