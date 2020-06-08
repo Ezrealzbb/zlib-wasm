@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import pako from 'pako';
 import zlibWasm from './zlib.wasm';
-import { isNative } from './util';
+import { isNative, isWebview } from './util';
 import {
   LoadState,
   ZlibWasmOptions,
@@ -195,6 +195,7 @@ export class ZlibWasmParser {
       base64DecodeBuff = Buffer.from(base64Text, 'base64');
       this.inputByteLength = base64DecodeBuff.byteLength;
       this.inputPtr = this.instanceExports._malloc(this.inputByteLength);
+      new Uint8Array(this.memory.buffer, this.inputPtr, this.inputByteLength).set(base64DecodeBuff);
     } else {
       this.inputPtr = outPtr;
       this.inputByteLength = this.base64ByteLength;
@@ -304,7 +305,7 @@ export class ZlibWasmParser {
    * 判断兼容性
    */
   static isSupportWasm(): boolean {
-    return window.WebAssembly && isNative(window.WebAssembly.compile);
+    return isWebview() && window.WebAssembly && isNative(window.WebAssembly.compile);
   }
 
 }

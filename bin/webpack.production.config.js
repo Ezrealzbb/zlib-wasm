@@ -12,6 +12,7 @@ module.exports = merge(config, {
     devtool: 'srouce-map',
     mode: 'production',
     output: {
+        globalObject: 'this',
         filename: 'index.js',
         path: distFolder,
         libraryTarget: 'umd',

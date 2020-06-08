@@ -14,3 +14,10 @@ export function isNULLPtr(ptr: number): boolean {
 export function isNative (Ctor) {
   return typeof Ctor === 'function' && /native code/.test(Ctor.toString())
 }
+
+/**
+ * 在worker 或 node 环境中不支持
+ */
+export function isWebview(): boolean {
+  return typeof window === 'object';
+}

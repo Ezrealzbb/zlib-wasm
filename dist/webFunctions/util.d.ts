@@ -8,3 +8,7 @@ export declare function isNULLPtr(ptr: number): boolean;
  * @param Ctor Webassembly & TextEncoder
  */
 export declare function isNative(Ctor: any): boolean;
+/**
+ * 在worker 或 node 环境中不支持
+ */
+export declare function isWebview(): boolean;

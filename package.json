@@ -1,6 +1,6 @@
 {
   "name": "@byted/zlib-wasm",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "a wasm generator for zlib",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
