@@ -1,10 +1,12 @@
 {
-  "name": "zlib-wasm",
+  "name": "@byted/zlib-wasm",
   "version": "1.0.0",
   "description": "a wasm generator for zlib",
-  "main": "index.js",
+  "main": "./dist/index.ts",
+  "types": "./dist/index.d.ts",
   "author": "zhaobo.jobe2333@bytedance.com",
   "license": "MIT & zlib",
+  "keywords": ["zlib", "WebAssembly"],
   "private": false,
   "scripts": {
     "build:wasm": "node ./bin/build.js && cp  ./build/zlib-sample.wasm ./src/zlib.wasm",
@@ -12,6 +14,9 @@
     "build:ts": "yarn clear && ./node_modules/.bin/tsc -p .",
     "clear": "rm -rf dist/*",
     "start": "node ./bin/server.js"
+  },
+  "publishConfig": {
+    "registry": "http://bnpm.byted.org/"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.3",
