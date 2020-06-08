@@ -1,12 +1,15 @@
 {
   "name": "@byted/zlib-wasm",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "a wasm generator for zlib",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "author": "jobezbb@163.com",
   "license": "MIT & zlib",
-  "keywords": ["zlib", "WebAssembly"],
+  "keywords": [
+    "zlib",
+    "WebAssembly"
+  ],
   "files": [
     "dist",
     "README.md"
