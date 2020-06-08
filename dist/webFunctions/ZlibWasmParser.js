@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -35,15 +34,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
-exports.ZlibWasmParser = void 0;
-var buffer_1 = require("buffer");
-var pako_1 = require("pako");
-var zlib_wasm_1 = require("./zlib.wasm");
-var lodash_es_1 = require("lodash-es");
-var types_1 = require("./types");
-var TextParser_1 = require("./TextParser");
-var util_1 = require("./util");
+import { Buffer } from 'buffer';
+import pako from 'pako';
+import zlibWasm from './zlib.wasm';
+import { isNative } from 'lodash-es';
+import { LoadState, TimeRecordLabel, ReturnCodes, } from './types';
+import { TextDecodeParser, TextEncodeParser } from './TextParser';
+import { isNULLPtr } from './util';
 var DEFAULT_COMPRESSION_LEVEL = 9;
 var DEFAULT_INITIAL_MEMORY_PAGES = 10;
 var NO_ZLIB_HEADER = -1;
@@ -51,9 +48,9 @@ var ZlibWasmParser = /** @class */ (function () {
     function ZlibWasmParser(options) {
         this.timeMaps = {};
         // 将 base64 字符编译为 ArrayBuffer，默认是 window.TextEncoder
-        this.encoder = new TextParser_1.TextEncodeParser;
+        this.encoder = new TextEncodeParser;
         // 将 ArrayBuffer 转化为字符，默认是 window.TextDecoder
-        this.decoder = new TextParser_1.TextDecodeParser;
+        this.decoder = new TextDecodeParser;
         this.base64Ptr = 0;
         this.base64ByteLength = 0;
         this.inputPtr = 0;
@@ -63,16 +60,16 @@ var ZlibWasmParser = /** @class */ (function () {
         var debug = options.debug;
         this.debug = debug;
         if (debug) {
-            this.pako = pako_1["default"];
-            this.buff = buffer_1.Buffer;
+            this.pako = pako;
+            this.buff = Buffer;
         }
         if (ZlibWasmParser.isSupportWasm()) {
-            this.loadState = types_1.LoadState.LOADING;
+            this.loadState = LoadState.LOADING;
             this.init();
         }
         else {
             console.warn('[zlibwasm] wasm not support');
-            this.loadState = types_1.LoadState.NOT_SUPPORT;
+            this.loadState = LoadState.NOT_SUPPORT;
         }
     }
     ZlibWasmParser.prototype.init = function () {
@@ -84,7 +81,7 @@ var ZlibWasmParser = /** @class */ (function () {
                         _a.trys.push([0, 3, 4, 5]);
                         this.memory = new WebAssembly.Memory({
                             // 以页(64k) 为单位 
-                            initial: DEFAULT_INITIAL_MEMORY_PAGES
+                            initial: DEFAULT_INITIAL_MEMORY_PAGES,
                         });
                         importEnv = {
                             memory: this.memory,
@@ -93,29 +90,29 @@ var ZlibWasmParser = /** @class */ (function () {
                             writeToJs_base64: this.recordBase64.bind(this),
                             jsLog: this.wasmLog,
                             _abort: console.error,
-                            _grow: function () { return true; }
+                            _grow: function () { return true; },
                         };
-                        return [4 /*yield*/, WebAssembly.compile(buffer_1.Buffer.from(zlib_wasm_1["default"], 'base64'))];
+                        return [4 /*yield*/, WebAssembly.compile(Buffer.from(zlibWasm, 'base64'))];
                     case 1:
                         module_1 = _a.sent();
                         return [4 /*yield*/, WebAssembly.instantiate(module_1, {
-                                env: importEnv
+                                env: importEnv,
                             })];
                     case 2:
                         instance = _a.sent();
                         enable = this.checkEnable(instance);
                         if (enable) {
-                            this.loadState = types_1.LoadState.READY;
+                            this.loadState = LoadState.READY;
                             this.instanceExports = instance.exports;
                         }
                         else {
-                            this.loadState = types_1.LoadState.ERROR;
+                            this.loadState = LoadState.ERROR;
                         }
                         return [3 /*break*/, 5];
                     case 3:
                         ex_1 = _a.sent();
                         console.error(ex_1);
-                        this.loadState = types_1.LoadState.ERROR;
+                        this.loadState = LoadState.ERROR;
                         return [3 /*break*/, 5];
                     case 4:
                         this.reset();
@@ -178,7 +175,7 @@ var ZlibWasmParser = /** @class */ (function () {
         if (!this.isReady()) {
             return this.pakoUngzip(base64Text);
         }
-        this.timeRecord(types_1.TimeRecordLabel.WASM_UNGZIP);
+        this.timeRecord(TimeRecordLabel.WASM_UNGZIP);
         this.reset();
         // 将text转换为 ArrayBuffer
         var textBuff = this.encoder.encode(base64Text);
@@ -193,7 +190,7 @@ var ZlibWasmParser = /** @class */ (function () {
         var base64DecodeBuff;
         // 解码失败，走 Buffer的解码
         if (!outPtr) {
-            base64DecodeBuff = buffer_1.Buffer.from(base64Text, 'base64');
+            base64DecodeBuff = Buffer.from(base64Text, 'base64');
             this.inputByteLength = base64DecodeBuff.byteLength;
             this.inputPtr = this.instanceExports._malloc(this.inputByteLength);
         }
@@ -204,24 +201,24 @@ var ZlibWasmParser = /** @class */ (function () {
         // 默认传入最大内存
         this.outputByteLength = this.memory.buffer.byteLength;
         this.outputPtr = this.instanceExports._malloc(this.outputByteLength);
-        if (util_1.isNULLPtr(this.inputPtr) || util_1.isNULLPtr(this.outputPtr)) {
+        if (isNULLPtr(this.inputPtr) || isNULLPtr(this.outputPtr)) {
             return this.pakoUngzip(base64Text);
         }
         // 开始解压
         var ret = this.instanceExports._uncompress_gzip(this.inputPtr, this.inputByteLength, this.outputPtr, this.outputByteLength);
-        if (ret !== types_1.ReturnCodes.Z_OK) {
+        if (ret !== ReturnCodes.Z_OK) {
             console.warn("[zlibwasm] wasm ungzip fail with code " + ret + ", using pako instead");
             return this.pakoUngzip(base64Text);
         }
         var outputBuff = this.memory.buffer.slice(this.outputPtr, this.outputPtr + this.outputByteLength);
         var outputText = this.decoder.decode(outputBuff);
-        this.timeRecordEnd(types_1.TimeRecordLabel.WASM_UNGZIP);
+        this.timeRecordEnd(TimeRecordLabel.WASM_UNGZIP);
         return outputText;
     };
     ZlibWasmParser.prototype.pakoUngzip = function (base64Text) {
-        this.timeRecord(types_1.TimeRecordLabel.PAKO_UNGZIP);
-        var ret = pako_1["default"].ungzip(buffer_1.Buffer.from(base64Text, 'base64'), { to: 'string' });
-        this.timeRecordEnd(types_1.TimeRecordLabel.PAKO_UNGZIP);
+        this.timeRecord(TimeRecordLabel.PAKO_UNGZIP);
+        var ret = pako.ungzip(Buffer.from(base64Text, 'base64'), { to: 'string' });
+        this.timeRecordEnd(TimeRecordLabel.PAKO_UNGZIP);
         return ret;
     };
     ZlibWasmParser.prototype.gzip = function (text, level) {
@@ -229,7 +226,7 @@ var ZlibWasmParser = /** @class */ (function () {
         if (!this.isReady()) {
             return this.pakoGzip(text, level);
         }
-        this.timeRecord(types_1.TimeRecordLabel.WASM_GZIP);
+        this.timeRecord(TimeRecordLabel.WASM_GZIP);
         this.reset();
         // 将text转换为 ArrayBuffer
         var textBuff = this.encoder.encode(text);
@@ -245,13 +242,13 @@ var ZlibWasmParser = /** @class */ (function () {
         // 为保证输出缓冲区足够大，缓冲区大小设置为 compressBound() * 2
         this.outputByteLength = this.instanceExports._compress_bound(this.inputByteLength) * 2;
         this.outputPtr = this.instanceExports._malloc(this.outputByteLength);
-        if (util_1.isNULLPtr(this.inputPtr) || util_1.isNULLPtr(this.outputPtr)) {
-            this.timeRecordEnd(types_1.TimeRecordLabel.WASM_GZIP);
+        if (isNULLPtr(this.inputPtr) || isNULLPtr(this.outputPtr)) {
+            this.timeRecordEnd(TimeRecordLabel.WASM_GZIP);
             return this.pakoGzip(text, level);
         }
         // 开始执行压缩
         var ret = this.instanceExports._compress_gzip(this.inputPtr, this.inputByteLength, this.outputPtr, this.outputByteLength, level);
-        if (ret !== types_1.ReturnCodes.Z_OK) {
+        if (ret !== ReturnCodes.Z_OK) {
             console.warn("[zlibwasm] wasm gzip fail with code " + ret + ", using pako instead");
             return this.pakoGzip(text);
         }
@@ -259,25 +256,26 @@ var ZlibWasmParser = /** @class */ (function () {
         this.instanceExports._base64_encode(this.outputPtr, this.outputByteLength, this.outputByteLength * 4 / 3);
         var outputBuff = this.memory.buffer.slice(this.base64Ptr, this.base64Ptr + this.base64ByteLength);
         var outputText = this.decoder.decode(outputBuff);
-        this.timeRecordEnd(types_1.TimeRecordLabel.WASM_GZIP);
+        this.timeRecordEnd(TimeRecordLabel.WASM_GZIP);
         return outputText;
     };
     ZlibWasmParser.prototype.pakoGzip = function (text, level) {
         if (level === void 0) { level = DEFAULT_COMPRESSION_LEVEL; }
-        this.timeRecord(types_1.TimeRecordLabel.PAKO_GZIP);
-        var ret = buffer_1.Buffer.from(pako_1["default"].gzip(text, { level: level })).toString('base64');
-        this.timeRecordEnd(types_1.TimeRecordLabel.PAKO_GZIP);
+        this.timeRecord(TimeRecordLabel.PAKO_GZIP);
+        var ret = Buffer.from(pako.gzip(text, { level: level })).toString('base64');
+        this.timeRecordEnd(TimeRecordLabel.PAKO_GZIP);
         return ret;
     };
     ZlibWasmParser.prototype.isReady = function () {
-        return this.loadState === types_1.LoadState.READY;
+        return this.loadState === LoadState.READY;
     };
     /**
      * 判断兼容性
      */
     ZlibWasmParser.isSupportWasm = function () {
-        return window.WebAssembly && lodash_es_1.isNative(window.WebAssembly.compile);
+        return window.WebAssembly && isNative(window.WebAssembly.compile);
     };
     return ZlibWasmParser;
 }());
-exports.ZlibWasmParser = ZlibWasmParser;
+export { ZlibWasmParser };
+//# sourceMappingURL=ZlibWasmParser.js.map

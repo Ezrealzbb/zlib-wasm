@@ -7,11 +7,12 @@
         ],
         "module": "esNext",
         "target": "es5",
-        "moduleResolution": "Node",
+        "moduleResolution": "Classic",
         "skipLibCheck": true,
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
-        "outDir": "./dist",
+        "declaration": true,
+        "outDir": "dist",
         "typeRoots": [
             "node_modules/@types",
         ]
