@@ -1,3 +1,0 @@
-export * from './ZlibWasmParser';
-export * from './types';
-//# sourceMappingURL=index.js.map

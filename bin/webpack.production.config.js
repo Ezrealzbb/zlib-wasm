@@ -8,11 +8,11 @@ const {
 const merge = require('webpack-merge');
 
 module.exports = merge(config, {
-    entry: path.resolve(srcFolder, 'index.js'),
+    entry: path.resolve(srcFolder, 'index.ts'),
     devtool: 'srouce-map',
     mode: 'production',
     output: {
-        filename: 'zlib-wasm.js',
+        filename: 'index.js',
         path: distFolder,
         libraryTarget: 'umd',
     },

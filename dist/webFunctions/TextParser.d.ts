@@ -5,12 +5,12 @@ declare class CustomEncoder {
 declare class CustomDecoder {
     decode(textBuff: ArrayBuffer): string;
 }
-export declare const TextEncodeParser: typeof CustomEncoder | ({
+export declare const TextEncodeParser: ({
     new (): TextEncoder;
     prototype: TextEncoder;
-} & ((...args: any[]) => any));
-export declare const TextDecodeParser: typeof CustomDecoder | ({
+} & ((...args: any[]) => any)) | typeof CustomEncoder;
+export declare const TextDecodeParser: ({
     new (label?: string, options?: TextDecoderOptions): TextDecoder;
     prototype: TextDecoder;
-} & ((...args: any[]) => any));
+} & ((...args: any[]) => any)) | typeof CustomDecoder;
 export {};
