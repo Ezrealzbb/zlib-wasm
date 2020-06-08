@@ -12,7 +12,7 @@ const merge = require('webpack-merge');
 module.exports = merge(config, {
     context: srcFolder,
     mode: 'development',
-    entry: path.resolve(srcFolder, 'main.ts'),
+    entry: path.resolve(demoFolder, 'main.ts'),
     output: {
         path: distFolder,
         filename: 'main.bundle.js',
