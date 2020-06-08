@@ -6,3 +6,11 @@
 export function isNULLPtr(ptr: number): boolean {
   return ptr === 0;
 }
+
+/**
+ *  判断是否是原生方法
+ * @param Ctor Webassembly & TextEncoder
+ */
+export function isNative (Ctor) {
+  return typeof Ctor === 'function' && /native code/.test(Ctor.toString())
+}

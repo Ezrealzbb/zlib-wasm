@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import pako from 'pako';
 import zlibWasm from './zlib.wasm';
-import { isNative } from 'lodash-es';
+import { isNative } from './util';
 import {
   LoadState,
   ZlibWasmOptions,

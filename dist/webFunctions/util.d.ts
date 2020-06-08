@@ -3,3 +3,8 @@
  * @param ptr 指针
  */
 export declare function isNULLPtr(ptr: number): boolean;
+/**
+ *  判断是否是原生方法
+ * @param Ctor Webassembly & TextEncoder
+ */
+export declare function isNative(Ctor: any): boolean;

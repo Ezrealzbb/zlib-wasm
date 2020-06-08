@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import { isNative } from 'lodash-es';
+import { isNative } from './util';
 
 class CustomEncoder {
     encode(text: string) {

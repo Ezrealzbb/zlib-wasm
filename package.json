@@ -44,7 +44,6 @@
   },
   "dependencies": {
     "buffer": "5.6.0",
-    "lodash-es": "4.17.15",
     "pako": "1.0.11"
   }
 }
