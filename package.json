@@ -23,7 +23,7 @@
     "start": "node ./bin/server.js"
   },
   "publishConfig": {
-    "registry": "http://bnpm.byted.org/"
+    "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.3",
