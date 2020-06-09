@@ -1,3 +1,3 @@
-import { ZlibWasmParser } from '../src/index';
+import { zlib } from '../src/index';
 
-(window as any) .zlib = new ZlibWasmParser({ debug: true });
+(window as any) .zlib = zlib;

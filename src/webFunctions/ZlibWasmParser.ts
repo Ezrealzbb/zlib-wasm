@@ -186,12 +186,16 @@ export class ZlibWasmParser {
 
     // 执行base64 解码，得到原始的二进制数据
     // 解压之后的二进制长度应该是原始长度的 3/4
-    const outPtr = this.instanceExports._base64_decode(this.base64Ptr, textBuff.byteLength, textBuff.byteLength * (3 / 4));
+    // const outPtr = this.instanceExports._base64_decode(this.base64Ptr, textBuff.byteLength, textBuff.byteLength * (3 / 4));
+    const outLen = textBuff.byteLength * 3 / 4;
+    const outPtr = this.instanceExports._malloc(outLen);
+    const decodeRet = this.instanceExports._base64_decode2(this.base64Ptr, textBuff.byteLength, outPtr, outLen);
+    console.log('[zlibwasm] decodeRet', decodeRet);
 
     let base64DecodeBuff;
 
     // 解码失败，走 Buffer的解码
-    if (!outPtr) {
+    if (decodeRet) {
       base64DecodeBuff = Buffer.from(base64Text, 'base64');
       this.inputByteLength = base64DecodeBuff.byteLength;
       this.inputPtr = this.instanceExports._malloc(this.inputByteLength);

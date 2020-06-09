@@ -32,6 +32,7 @@ export interface InstaceExports extends WebAssembly.Exports {
     _free: (ptr: Pointer) => void;
     _malloc: (size: number) => Pointer;
     _base64_decode: (inputPtr: Pointer, inputLen: number, outLen: number) => Pointer;
+    _base64_decode2: (inputPtr: Pointer, inputLen: number, outPtr: Pointer, outLen: number) => Pointer;
     _base64_encode: (inputPtr: Pointer, inputLen: number, outLen: number) => Pointer;
     _uncompress_gzip: (inputPtr: Pointer, inputLen: number, outPtr: Pointer, outLen: number) => ReturnCodes;
     _compress_bound: (size: number) => number;
