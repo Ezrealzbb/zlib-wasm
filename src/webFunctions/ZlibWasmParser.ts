@@ -150,6 +150,12 @@ export class ZlibWasmParser {
    * 释放内存
    */
   private reset() {
+
+    if (this.base64Ptr) {
+      this.instanceExports._free(this.base64Ptr);
+      this.base64Ptr = 0;
+    }
+    
     if (this.inputPtr) {
       this.instanceExports._free(this.inputPtr);
       this.inputPtr = 0;
@@ -160,8 +166,7 @@ export class ZlibWasmParser {
     }
     this.inputByteLength = 0;
     this.outputByteLength = 0;
-    this.inputPtr = 0;
-    this.outputPtr = 0;
+    this.base64ByteLength = 0;
   }
 
   
