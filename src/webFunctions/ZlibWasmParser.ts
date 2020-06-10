@@ -37,8 +37,10 @@ export class ZlibWasmParser {
   // 将 ArrayBuffer 转化为字符，默认是 window.TextDecoder
   private decoder = new TextDecodeParser;
 
-  private base64Ptr: Pointer = 0;
-  private base64ByteLength: number = 0;
+  private base64InputPtr: Pointer = 0;
+  private base64InputByteLength: number = 0;
+  private base64OutputPtr: Pointer = 0;
+  private base64OutputByteLength: number = 0;
   
   private inputPtr: Pointer = 0;
   private inputByteLength: number = 0;
@@ -108,8 +110,8 @@ export class ZlibWasmParser {
   }
 
   private recordBase64(ptr: number, size: number) {
-    this.base64Ptr = ptr;
-    this.base64ByteLength = size;
+    this.base64OutputPtr = ptr;
+    this.base64OutputByteLength = size;
   }
 
   private recordGzip(size: number) {
@@ -151,22 +153,28 @@ export class ZlibWasmParser {
    */
   private reset() {
 
-    if (this.base64Ptr) {
-      this.instanceExports._free(this.base64Ptr);
-      this.base64Ptr = 0;
+    if (this.base64InputPtr) {
+      this.instanceExports._free(this.base64InputPtr);
+      this.base64InputPtr = 0;
+      this.base64InputByteLength = 0;
+    }
+
+    if (this.base64OutputPtr) {
+      this.instanceExports._free(this.base64OutputPtr);
+      this.base64OutputPtr = 0;
+      this.base64OutputByteLength = 0;
     }
     
     if (this.inputPtr) {
       this.instanceExports._free(this.inputPtr);
       this.inputPtr = 0;
+      this.inputByteLength = 0;
     }
     if (this.outputPtr) {
       this.instanceExports._free(this.outputPtr);
       this.outputPtr = 0;
+      this.outputByteLength = 0;
     }
-    this.inputByteLength = 0;
-    this.outputByteLength = 0;
-    this.base64ByteLength = 0;
   }
 
   
@@ -183,31 +191,32 @@ export class ZlibWasmParser {
     const textBuff = this.encoder.encode(base64Text);
     
     // 在线性内存中分配，得到数据指针的起始位置
-    this.base64Ptr = this.instanceExports._malloc(textBuff.byteLength);
+    this.base64InputPtr = this.instanceExports._malloc(textBuff.byteLength);
+    this.base64InputByteLength = textBuff.byteLength;
 
     // 赋值内存
-    const emptyBuff = new Uint8Array(this.memory.buffer, this.base64Ptr, textBuff.byteLength);
+    const emptyBuff = new Uint8Array(this.memory.buffer, this.base64InputPtr, this.base64InputByteLength);
     emptyBuff.set(textBuff);
 
     // 执行base64 解码，得到原始的二进制数据
     // 解压之后的二进制长度应该是原始长度的 3/4
     // const outPtr = this.instanceExports._base64_decode(this.base64Ptr, textBuff.byteLength, textBuff.byteLength * (3 / 4));
-    const outLen = textBuff.byteLength * 3 / 4;
-    const outPtr = this.instanceExports._malloc(outLen);
-    const decodeRet = this.instanceExports._base64_decode2(this.base64Ptr, textBuff.byteLength, outPtr, outLen);
+    this.base64OutputByteLength = textBuff.byteLength * 3 / 4;
+    this.base64OutputPtr = this.instanceExports._malloc(this.base64OutputByteLength);
+    const decodeRet = this.instanceExports._base64_decode2(this.base64InputPtr, this.base64InputByteLength, this.base64OutputPtr, this.base64OutputByteLength);
     console.log('[zlibwasm] decodeRet', decodeRet);
-
-    let base64DecodeBuff;
 
     // 解码失败，走 Buffer的解码
     if (decodeRet) {
-      base64DecodeBuff = Buffer.from(base64Text, 'base64');
+      const base64DecodeBuff = Buffer.from(base64Text, 'base64');
       this.inputByteLength = base64DecodeBuff.byteLength;
       this.inputPtr = this.instanceExports._malloc(this.inputByteLength);
       new Uint8Array(this.memory.buffer, this.inputPtr, this.inputByteLength).set(base64DecodeBuff);
     } else {
-      this.inputPtr = outPtr;
-      this.inputByteLength = this.base64ByteLength;
+      this.inputPtr = this.base64OutputPtr;
+      // 值和 inputPtr 一致，防止在 reset 函数中重复 _free 报错 unreachable
+      this.base64OutputPtr = 0;
+      this.inputByteLength = this.base64OutputByteLength;
     }
 
     // 默认传入最大内存
@@ -292,7 +301,7 @@ export class ZlibWasmParser {
 
     // 将压缩之后的 ArrayBuff 转换为 base64 字符
     this.instanceExports._base64_encode(this.outputPtr, this.outputByteLength, this.outputByteLength * 4 / 3);
-    const outputBuff = this.memory.buffer.slice(this.base64Ptr, this.base64Ptr + this.base64ByteLength);
+    const outputBuff = this.memory.buffer.slice(this.base64OutputPtr, this.base64OutputPtr + this.base64OutputByteLength);
     const outputText = this.decoder.decode(outputBuff);
 
     this.timeRecordEnd(TimeRecordLabel.WASM_GZIP);

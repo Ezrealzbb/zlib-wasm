@@ -20,7 +20,7 @@ export char* _base64_decode(unsigned char* src, size_t inputLen, size_t * outLen
 }
 
 export int _base64_decode2(unsigned char* src, size_t inputLen, unsigned char* out, size_t * outLen) {
-  int ret = base64_encode2(src, inputLen, out, &outLen);
+  int ret = base64_decode2(src, inputLen, out, &outLen);
   if (ret == 0) {
     writeToJs_base64(out, outLen);
   }

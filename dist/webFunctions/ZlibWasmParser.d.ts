@@ -9,8 +9,10 @@ export declare class ZlibWasmParser {
     private timeMaps;
     private encoder;
     private decoder;
-    private base64Ptr;
-    private base64ByteLength;
+    private base64InputPtr;
+    private base64InputByteLength;
+    private base64OutputPtr;
+    private base64OutputByteLength;
     private inputPtr;
     private inputByteLength;
     private outputPtr;

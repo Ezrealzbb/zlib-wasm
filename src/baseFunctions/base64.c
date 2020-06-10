@@ -253,7 +253,7 @@ int base64_encode2(const void* data_buf, size_t dataLength, char* result, size_t
 
 
 
-int base64decode2 (char *in, size_t inLen, unsigned char *out, size_t *outLen) { 
+int base64_decode2 (char *in, size_t inLen, unsigned char *out, size_t *outLen) { 
     char *end = in + inLen;
     char iter = 0;
     uint32_t buf = 0;
@@ -261,7 +261,9 @@ int base64decode2 (char *in, size_t inLen, unsigned char *out, size_t *outLen) {
     
     while (in < end) {
         unsigned char c = d[*in++];
-        
+		if (c == INVALID) {
+        	return INVALID;
+		}
         switch (c) {
         case WHITESPACE: continue;   /* skip whitespace */
         case INVALID:    return 1;   /* invalid input, return error */
@@ -284,12 +286,12 @@ int base64decode2 (char *in, size_t inLen, unsigned char *out, size_t *outLen) {
     }
    
     if (iter == 3) {
-        if ((len += 2) > *outLen) return 1; /* buffer overflow */
+        if ((len += 2) > *outLen) return 2; /* buffer overflow */
         *(out++) = (buf >> 10) & 255;
         *(out++) = (buf >> 2) & 255;
     }
     else if (iter == 2) {
-        if (++len > *outLen) return 1; /* buffer overflow */
+        if (++len > *outLen) return 3; /* buffer overflow */
         *(out++) = (buf >> 4) & 255;
     }
 
