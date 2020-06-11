@@ -1,4 +1,5 @@
 import { zlib } from '../src/index';
+import { randomString, calcAvg } from './util';
 
 const win: any = window;
 
@@ -6,46 +7,70 @@ function test(label: string, fn: () => void, time: number) {
     for (let i = 0; i < time; i++) {
         fn();
     }
-
-    console.log(`[zlibwasm] ${label} avg const time ${calcAvg(zlib.timeSet)}`);
+    const avg = calcAvg(zlib.timeSet);
+    // console.log(`[zlibwasm] ${label} avg const time ${avg}`);
 
     zlib.timeSet.length = 0;
+    return avg;
 }
 
-function calcAvg(arr: number[]) {
-    return arr.reduce((pre, cur) => pre + cur, 0) / arr.length;
-}
 
 win.zlib = zlib;
+win.ungipOutput = '';
+win.gipOutput = '';
 
-
-function testUngzip(time: number) {
+function testUngzip(time: number, content: string) {
     let wasmRet, pakoRet;
-    test('wasm', () => {
-        wasmRet = zlib.ungzipBase64(win.a);
+    const wasmUngipAvg = test('wasm', () => {
+        wasmRet = zlib.ungzipBase64(content);
     }, time);
 
-    test('pako', () => {
-        pakoRet = zlib.pakoUngzip(win.a);
+    const pakoUngipAvg = test('pako', () => {
+        pakoRet = zlib.pakoUngzip(content);
     }, time);
-
-    console.log(wasmRet === pakoRet);
-    return pakoRet;
+    console.assert(wasmRet === pakoRet);
+    win.ungipOutput = wasmRet;
+    return {
+        wasmUngipAvg, pakoUngipAvg,
+    }
 }
 
-function testGzip(time: number) {
+function testGzip(time: number, content: string) {
     let wasmRet, pakoRet;
-    test('wasm', () => {
-        wasmRet = zlib.gzip(win.a);
+    const wasmGzipAvg = test('wasm', () => {
+        wasmRet = zlib.gzip(content);
     }, time);
 
-    test('pako', () => {
-        pakoRet = zlib.gzip(win.a);
+    const pakoGzipAvg = test('pako', () => {
+        pakoRet = zlib.gzip(content);
     }, time);
 
-    console.log(wasmRet === pakoRet);
-    return pakoRet;
+    console.assert(wasmRet === pakoRet);
+    win.gipOutput = wasmRet;
+    return {
+        wasmGzipAvg, pakoGzipAvg,
+    }
 }
 
 win.testUngzip = testUngzip;
 win.testGzip = testGzip;
+win.differentInputText = differentInputText;
+
+function differentInputText(len: number = 0, time: number = 1) {
+    const wasmUnzip = [];
+    const wasmGzip = [];
+    const pakoUngzip = [];
+    const pakoGzip = [];
+    for (let i = 1; i <= len; i++) {
+        const content = randomString(i);
+        const { wasmGzipAvg, pakoGzipAvg } = testGzip(time, content);
+        wasmGzip.push(wasmGzipAvg);
+        pakoGzip.push(pakoGzipAvg);
+
+        const { wasmUngipAvg, pakoUngipAvg, } = testUngzip(time, win.gipOutput);
+        wasmUnzip.push(wasmUngipAvg);
+        pakoUngzip.push(pakoUngipAvg);
+
+        console.assert(win.ungipOutput === content);
+    }
+}
