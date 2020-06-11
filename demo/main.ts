@@ -2,8 +2,8 @@ import { zlib } from '../src/index';
 
 const win: any = window;
 
-function test(label: string, fn: () => void) {
-    for (let i = 0; i < 1000; i++) {
+function test(label: string, fn: () => void, time: number) {
+    for (let i = 0; i < time; i++) {
         fn();
     }
 
@@ -19,24 +19,32 @@ function calcAvg(arr: number[]) {
 win.zlib = zlib;
 
 
-function testUngzip() {
+function testUngzip(time: number) {
+    let wasmRet, pakoRet;
     test('wasm', () => {
-        zlib.ungzipBase64(win.a);
-    });
+        wasmRet = zlib.ungzipBase64(win.a);
+    }, time);
 
     test('pako', () => {
-        zlib.pakoUngzip(win.a);
-    });
+        pakoRet = zlib.pakoUngzip(win.a);
+    }, time);
+
+    console.log(wasmRet === pakoRet);
+    return pakoRet;
 }
 
-function testGzip() {
+function testGzip(time: number) {
+    let wasmRet, pakoRet;
     test('wasm', () => {
-        zlib.gzip(win.a);
-    });
+        wasmRet = zlib.gzip(win.a);
+    }, time);
 
     test('pako', () => {
-        zlib.gzip(win.a);
-    });
+        pakoRet = zlib.gzip(win.a);
+    }, time);
+
+    console.log(wasmRet === pakoRet);
+    return pakoRet;
 }
 
 win.testUngzip = testUngzip;
