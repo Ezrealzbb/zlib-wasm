@@ -31,6 +31,7 @@ export class ZlibWasmParser {
   private loadState: LoadState;
   private debug: boolean;
   private timeMaps: TimeRecordMaps = {} as TimeRecordMaps;
+  public timeSet: number[] = [];
 
   // 将 base64 字符编译为 ArrayBuffer，默认是 window.TextEncoder
   private encoder = new TextEncodeParser;
@@ -143,8 +144,10 @@ export class ZlibWasmParser {
 
   private timeRecordEnd(label: TimeRecordLabel) {
     if (this.debug && label && this.timeMaps[label]) {
-      console.log(`[zlibwasm] time performance ${label}: ${ window.performance.now() - this.timeMaps[label] }ms`);
+      const constTime = window.performance.now() - this.timeMaps[label];
+      // console.log(`[zlibwasm] time performance ${label}: ${ constTime }ms`);
       this.timeMaps[label] = 0;
+      this.timeSet.push(constTime);
     }
   }
 
@@ -300,7 +303,12 @@ export class ZlibWasmParser {
     }
 
     // 将压缩之后的 ArrayBuff 转换为 base64 字符
-    this.instanceExports._base64_encode(this.outputPtr, this.outputByteLength, this.outputByteLength * 4 / 3);
+    this.base64InputPtr = this.outputPtr;
+    this.base64InputByteLength = this.outputByteLength;
+    this.outputPtr = 0;
+    this.base64OutputByteLength = this.outputByteLength * 4 / 3;
+    this.base64OutputPtr = this.instanceExports._malloc(this.base64OutputByteLength);
+    this.instanceExports._base64_encode2(this.base64InputPtr, this.base64InputByteLength, this.base64OutputPtr, this.base64OutputByteLength);
     const outputBuff = this.memory.buffer.slice(this.base64OutputPtr, this.base64OutputPtr + this.base64OutputByteLength);
     const outputText = this.decoder.decode(outputBuff);
 
