@@ -89,30 +89,16 @@ _base64_encode:
 _base64_encode2:
 	.param  	i32, i32, i32, i32
 	.result 	i32
-	.local  	i32
-	i32.const	$push4=, 0
-	i32.const	$push2=, 0
-	i32.load	$push1=, __stack_pointer($pop2)
-	i32.const	$push3=, 16
-	i32.sub 	$push13=, $pop1, $pop3
-	tee_local	$push12=, $4=, $pop13
-	i32.store	__stack_pointer($pop4), $pop12
-	i32.store	12($4), $3
 	block   	
-	i32.const	$push8=, 12
-	i32.add 	$push9=, $4, $pop8
-	i32.call	$push11=, base64_encode2@FUNCTION, $0, $1, $2, $pop9
-	tee_local	$push10=, $0=, $pop11
-	br_if   	0, $pop10
-	i32.load	$push0=, 12($4)
-	call    	writeToJs_base64@FUNCTION, $2, $pop0
+	i32.call	$push1=, base64_encode2@FUNCTION, $0, $1, $2, $3
+	tee_local	$push0=, $0=, $pop1
+	i32.eqz 	$push2=, $pop0
+	br_if   	0, $pop2
+	return  	$0
 .LBB5_2:
 	end_block
-	i32.const	$push7=, 0
-	i32.const	$push5=, 16
-	i32.add 	$push6=, $4, $pop5
-	i32.store	__stack_pointer($pop7), $pop6
-	copy_local	$push14=, $0
+	call    	writeToJs_base64@FUNCTION, $2, $3
+	copy_local	$push3=, $0
 	.endfunc
 .Lfunc_end5:
 	.size	_base64_encode2, .Lfunc_end5-_base64_encode2

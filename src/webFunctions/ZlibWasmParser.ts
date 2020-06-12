@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import pako from 'pako';
 import zlibWasm from './zlib.wasm';
-import { isNative, isWebview } from './util';
+import { isNative, isWebview, getMinDivisionNumber } from './util';
 import {
   LoadState,
   ZlibWasmOptions,
@@ -267,13 +267,12 @@ export class ZlibWasmParser {
     // 将text转换为 ArrayBuffer
     const textBuff = this.encoder.encode(text);
     
-    // 在线性内存中分配，得到数据指针的起始位置
-    this.inputPtr = this.instanceExports._malloc(textBuff.byteLength);
-
     this.inputByteLength = textBuff.byteLength;
+    // 在线性内存中分配，得到数据指针的起始位置
+    this.inputPtr = this.instanceExports._malloc(this.inputByteLength);
 
     // 赋值内存
-    const emptyBuff = new Uint8Array(this.memory.buffer, this.inputPtr, textBuff.byteLength);
+    const emptyBuff = new Uint8Array(this.memory.buffer, this.inputPtr, this.inputByteLength);
     emptyBuff.set(textBuff);
 
     // 计算压缩之后的最大可能大小
@@ -306,7 +305,7 @@ export class ZlibWasmParser {
     this.base64InputPtr = this.outputPtr;
     this.base64InputByteLength = this.outputByteLength;
     this.outputPtr = 0;
-    this.base64OutputByteLength = this.outputByteLength * 4 / 3;
+    this.base64OutputByteLength = getMinDivisionNumber(this.base64InputByteLength, 3) * 4 / 3;
     this.base64OutputPtr = this.instanceExports._malloc(this.base64OutputByteLength);
     this.instanceExports._base64_encode2(this.base64InputPtr, this.base64InputByteLength, this.base64OutputPtr, this.base64OutputByteLength);
     const outputBuff = this.memory.buffer.slice(this.base64OutputPtr, this.base64OutputPtr + this.base64OutputByteLength);

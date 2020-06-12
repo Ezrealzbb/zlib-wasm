@@ -21,3 +21,13 @@ export function isNative (Ctor) {
 export function isWebview(): boolean {
   return typeof window === 'object';
 }
+
+/**
+ * 获取比 x 大的且能被 y 整除的最小数
+ * @param x 被除数
+ * @param y 除数
+ */
+export function getMinDivisionNumber(x: number, y: number) {
+  const reset = x % y;
+  return reset ? x + y - reset : x;
+}

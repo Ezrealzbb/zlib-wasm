@@ -213,49 +213,26 @@
   (get_local $0)
  )
  (func $_base64_encode2 (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32) (result i32)
-  (local $4 i32)
-  (i32.store offset=4
-   (i32.const 0)
-   (tee_local $4
-    (i32.sub
-     (i32.load offset=4
-      (i32.const 0)
-     )
-     (i32.const 16)
-    )
-   )
-  )
-  (i32.store offset=12
-   (get_local $4)
-   (get_local $3)
-  )
   (block $label$0
    (br_if $label$0
-    (tee_local $0
-     (call $base64_encode2
-      (get_local $0)
-      (get_local $1)
-      (get_local $2)
-      (i32.add
-       (get_local $4)
-       (i32.const 12)
+    (i32.eqz
+     (tee_local $0
+      (call $base64_encode2
+       (get_local $0)
+       (get_local $1)
+       (get_local $2)
+       (get_local $3)
       )
      )
     )
    )
-   (call $writeToJs_base64
-    (get_local $2)
-    (i32.load offset=12
-     (get_local $4)
-    )
+   (return
+    (get_local $0)
    )
   )
-  (i32.store offset=4
-   (i32.const 0)
-   (i32.add
-    (get_local $4)
-    (i32.const 16)
-   )
+  (call $writeToJs_base64
+   (get_local $2)
+   (get_local $3)
   )
   (get_local $0)
  )
