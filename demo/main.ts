@@ -9,6 +9,8 @@ const win: any = window;
 const btn = document.getElementById('test');
 const input = document.getElementById('randomStringLength') as HTMLInputElement;
 const runTimesInput = document.getElementById('runTimes') as HTMLInputElement;
+const messageBox = document.getElementById('message') as HTMLTextAreaElement;
+const statusBox = document.getElementById('status');
 
 
 win.zlib = zlib;
@@ -143,6 +145,7 @@ function generateEchartsData(originDatas) {
 
 function bindEvents() {
     btn.addEventListener('click', function() {
+        updateMessage('', true);
         calc(input.value, runTimesInput.value);
     });
 }
@@ -157,10 +160,47 @@ function calc(num: string, runTimes: string) {
     }
 }
 
+function updateBtnEnable(enable: boolean) {
+    if (enable) {
+        btn.removeAttribute('disabled');
+    } else {
+        btn.setAttribute('disabled', 'true');
+    }
+}
+
+function updateStatus(message: string) {
+    statusBox.innerText = message;
+}
+
+function updateMessage(message: string, clear: boolean = false) {
+    if (clear) {
+        messageBox.value = '';
+    } else {
+        messageBox.value += (message + '\n');
+    }
+}
+
+function mockLog() {
+    const oldLog = console.log;
+    console.log = function(...args) {
+        oldLog(...args);
+        if (typeof args[0] === 'string' && args[0].startsWith('[zlibwasm]')) {
+            updateMessage(args[0]);
+        }
+    }
+}
+
 function main() {
+    mockLog();
+    updateBtnEnable(false);
     initEcharts();
     bindEvents();
-    calc(input.value, runTimesInput.value);
+    zlib.loadedPromise.then(() => {
+        updateStatus('WASM 加载完成! 开始计算');
+        updateMessage('', true);
+        updateBtnEnable(true);
+        calc(input.value, runTimesInput.value);
+    });
 }
 
 main();
