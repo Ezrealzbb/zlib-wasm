@@ -1,7 +1,7 @@
 import { zlib } from '../src/index';
-import { randomString, calcAvg } from './util';
+import { randomString, calcAvg, checkDiffText } from './util';
 import echarts from 'echarts';
-import { range } from 'lodash-es';
+import { range, isEqual } from 'lodash-es';
 
 zlib.setDebug(true);
 
@@ -13,7 +13,7 @@ const runTimesInput = document.getElementById('runTimes') as HTMLInputElement;
 
 win.zlib = zlib;
 win.ungzipOutput = '';
-win.gipOutput = '';
+win.gzipOutput = '';
 win.chart = null;
 
 win.testUngzip = testUngzip;
@@ -41,8 +41,9 @@ function testUngzip(runTimes: number, content: string) {
     const pakoUngipAvg = testCore('pako', () => {
         pakoRet = zlib.pakoUngzip(content);
     }, runTimes);
-    console.assert(wasmRet === pakoRet);
+
     win.ungzipOutput = wasmRet;
+    console.assert(wasmRet, pakoRet);
     return {
         wasmUngipAvg, pakoUngipAvg,
     }
@@ -58,8 +59,11 @@ function testGzip(runTimes: number, content: string) {
         pakoRet = zlib.pakoGzip(content);
     }, runTimes);
 
-    console.assert(wasmRet === pakoRet);
-    win.gipOutput = wasmRet;
+    // wasmRet 和 pakoRet 的解压结果不一定一致，但是可以互相解压出正确的结果
+    // 这里不做断言
+    // console.assert(wasmRet, pakoRet);
+    win.gzipOutput = pakoRet;
+    
     return {
         wasmGzipAvg, pakoGzipAvg,
     }
@@ -79,7 +83,7 @@ function testMain(len: number = 1, time: number = 1, innerRunTime : number = 1) 
     }
     
     for (let i = 0; i < time; i++) {
-        const { wasmUngipAvg, pakoUngipAvg, } = testUngzip(innerRunTime, win.gipOutput);
+        const { wasmUngipAvg, pakoUngipAvg, } = testUngzip(innerRunTime, win.gzipOutput);
         wasmUnzip.push(wasmUngipAvg);
         pakoUngzip.push(pakoUngipAvg);
     }
