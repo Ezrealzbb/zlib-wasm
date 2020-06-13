@@ -1,5 +1,4 @@
 const path = require("path");
-const mkdirp = require("mkdirp");
 const waCliUtil = require("webassembly/cli/util");
 const OPTIMIZATION_LEVEL = process.argv[2] || "-Oz";
 
@@ -20,10 +19,8 @@ const zlibSources = [
 const baseRoot = path.resolve(__dirname, '../')
 const builddir = path.join(baseRoot, "build");
 const srcdir = path.join(baseRoot, "src");
-const baseFunctionsDir = path.join(srcdir, 'baseFunctions');
+const baseDir = path.join(srcdir, 'base');
 const zlibdir = path.join(baseRoot, "lib/zlib");
-
-mkdirp.sync(path.join(__dirname, "build"));
 
 // LLVM是目前苹果采用的编译器工具链 
 // Bitcode是LLVM编译器的中间代码的一种编码
@@ -45,7 +42,7 @@ mkdirp.sync(path.join(__dirname, "build"));
     "-fno-builtin", // Disable implicit builtin knowledge of functions
     "-isystem", path.join(waCliUtil.basedir, "include"), // Add directory to SYSTEM include search path
     "-isystem", path.join(waCliUtil.basedir, "lib/musl-wasm32/include"),
-    "-isystem", path.join(baseFunctionsDir, "include"),
+    "-isystem", path.join(baseDir, "include"),
     `-I${zlibdir}`, // Add directory to include search path 增加代码查找路径
   ], { cwd: builddir }); // output dir
 
@@ -57,7 +54,7 @@ mkdirp.sync(path.join(__dirname, "build"));
 
   // 编译base 64 函数
   await waCliUtil.run(path.join(waCliUtil.bindir, "clang"), [
-    path.join(baseFunctionsDir, 'base64.c'), // 也编译 base64
+    path.join(baseDir, 'base64.c'), // 也编译 base64
     OPTIMIZATION_LEVEL,
     "-c",
     "--target=wasm32-unknown-unknown",
@@ -68,15 +65,15 @@ mkdirp.sync(path.join(__dirname, "build"));
     "-fno-builtin",
     "-isystem", path.join(waCliUtil.basedir, "include"),
     "-isystem", path.join(waCliUtil.basedir, "lib/musl-wasm32/include"),
-    "-isystem", path.join(baseFunctionsDir, "include"),
+    "-isystem", path.join(baseDir, "include"),
     `-I${zlibdir}`, // 将 zlib 的库作为代码查找路径
-    `-I${path.join(baseFunctionsDir, "import.h")}`,
+    `-I${path.join(baseDir, "import.h")}`,
     "-o", "base64.bc",
   ], { cwd: builddir });
 
   // 编译自己写的 C 函数
   await waCliUtil.run(path.join(waCliUtil.bindir, "clang"), [
-    path.join(baseFunctionsDir, "zlib-sample.c"),
+    path.join(baseDir, "zlib-sample.c"),
     OPTIMIZATION_LEVEL,
     "-c",
     "--target=wasm32-unknown-unknown",
@@ -87,9 +84,9 @@ mkdirp.sync(path.join(__dirname, "build"));
     "-fno-builtin",
     "-isystem", path.join(waCliUtil.basedir, "include"),
     "-isystem", path.join(waCliUtil.basedir, "lib/musl-wasm32/include"),
-    "-isystem", path.join(baseFunctionsDir, "include"),
+    "-isystem", path.join(baseDir, "include"),
     `-I${zlibdir}`, // 将 zlib 的库作为代码查找路径
-    `-I${path.join(baseFunctionsDir, "import.h")}`,
+    `-I${path.join(baseDir, "import.h")}`,
     "-o", "tmp-zlib-sample.bc",
   ], { cwd: builddir });
 

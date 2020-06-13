@@ -1,4 +1,5 @@
-var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ中国打击👌🧐😳🤔😳🧐😛😍😱😍🧐🧐😳🤫🤔🤔🤫🤨✌🏼✌🏼';
+// var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ中国打击👌🧐😳🤔😳🧐😛😍😱😍🧐🧐😳🤫🤔🤔🤫🤨✌🏼✌🏼';
+var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ中国打击';
 export function randomString(length) {
     var result = '';
     for (var i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];

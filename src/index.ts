@@ -1,5 +1,5 @@
-import { ZlibWasmParser } from './webFunctions/index';
+import { ZlibWasmParser } from './web/index';
 
-export * from './webFunctions/types';
+export * from './web/types';
 
-export const zlib = new ZlibWasmParser({ debug: true });
+export const zlib = new ZlibWasmParser({});

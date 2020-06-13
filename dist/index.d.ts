@@ -1,3 +1,3 @@
-import { ZlibWasmParser } from './webFunctions/index';
-export * from './webFunctions/types';
+import { ZlibWasmParser } from './web/index';
+export * from './web/types';
 export declare const zlib: ZlibWasmParser;

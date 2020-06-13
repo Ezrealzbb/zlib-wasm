@@ -1,9 +1,26 @@
 import { zlib } from '../src/index';
 import { randomString, calcAvg } from './util';
+import echarts from 'echarts';
+import { range } from 'lodash-es';
+
+zlib.setDebug(true);
 
 const win: any = window;
+const btn = document.getElementById('test');
+const input = document.getElementById('randomStringLength') as HTMLInputElement;
+const runTimesInput = document.getElementById('runTimes') as HTMLInputElement;
 
-function test(label: string, fn: () => void, time: number) {
+
+win.zlib = zlib;
+win.ungzipOutput = '';
+win.gipOutput = '';
+win.chart = null;
+
+win.testUngzip = testUngzip;
+win.testGzip = testGzip;
+win.testMain = testMain;
+
+function testCore(label: string, fn: () => void, time: number) {
     for (let i = 0; i < time; i++) {
         fn();
     }
@@ -11,39 +28,35 @@ function test(label: string, fn: () => void, time: number) {
     // console.log(`[zlibwasm] ${label} avg const time ${avg}`);
 
     zlib.timeSet.length = 0;
-    return avg;
+    return +avg.toFixed(3);
 }
 
 
-win.zlib = zlib;
-win.ungipOutput = '';
-win.gipOutput = '';
-
-function testUngzip(time: number, content: string) {
+function testUngzip(runTimes: number, content: string) {
     let wasmRet, pakoRet;
-    const wasmUngipAvg = test('wasm', () => {
-        wasmRet = zlib.ungzipBase64(content);
-    }, time);
+    const wasmUngipAvg = testCore('wasm', () => {
+        wasmRet = zlib.ungzip(content);
+    }, runTimes);
 
-    const pakoUngipAvg = test('pako', () => {
+    const pakoUngipAvg = testCore('pako', () => {
         pakoRet = zlib.pakoUngzip(content);
-    }, time);
+    }, runTimes);
     console.assert(wasmRet === pakoRet);
-    win.ungipOutput = wasmRet;
+    win.ungzipOutput = wasmRet;
     return {
         wasmUngipAvg, pakoUngipAvg,
     }
 }
 
-function testGzip(time: number, content: string) {
+function testGzip(runTimes: number, content: string) {
     let wasmRet, pakoRet;
-    const wasmGzipAvg = test('wasm', () => {
+    const wasmGzipAvg = testCore('wasm', () => {
         wasmRet = zlib.gzip(content);
-    }, time);
+    }, runTimes);
 
-    const pakoGzipAvg = test('pako', () => {
-        pakoRet = zlib.gzip(content);
-    }, time);
+    const pakoGzipAvg = testCore('pako', () => {
+        pakoRet = zlib.pakoGzip(content);
+    }, runTimes);
 
     console.assert(wasmRet === pakoRet);
     win.gipOutput = wasmRet;
@@ -52,25 +65,98 @@ function testGzip(time: number, content: string) {
     }
 }
 
-win.testUngzip = testUngzip;
-win.testGzip = testGzip;
-win.differentInputText = differentInputText;
 
-function differentInputText(len: number = 0, time: number = 1) {
+function testMain(len: number = 1, time: number = 1, innerRunTime : number = 1) {
     const wasmUnzip = [];
     const wasmGzip = [];
     const pakoUngzip = [];
     const pakoGzip = [];
-    for (let i = 1; i <= len; i++) {
-        const content = randomString(i);
-        const { wasmGzipAvg, pakoGzipAvg } = testGzip(time, content);
+    const content = randomString(len);
+    for (let i = 0; i < time; i++) {
+        const { wasmGzipAvg, pakoGzipAvg } = testGzip(innerRunTime, content);
         wasmGzip.push(wasmGzipAvg);
         pakoGzip.push(pakoGzipAvg);
-
-        const { wasmUngipAvg, pakoUngipAvg, } = testUngzip(time, win.gipOutput);
+    }
+    
+    for (let i = 0; i < time; i++) {
+        const { wasmUngipAvg, pakoUngipAvg, } = testUngzip(innerRunTime, win.gipOutput);
         wasmUnzip.push(wasmUngipAvg);
         pakoUngzip.push(pakoUngipAvg);
+    }
 
-        console.assert(win.ungipOutput === content);
+    console.assert(win.ungzipOutput === content);
+    return {
+        wasmUnzip,
+        wasmGzip,
+        pakoUngzip,
+        pakoGzip,
+    };
+}
+
+function initEcharts() {
+    const container = document.getElementById('echarts');
+    win.chart = echarts.init(container as HTMLDivElement);
+}
+
+
+function renderChart(options) {
+    win.chart.setOption(options);
+}
+
+function generateEchartsData(originDatas) {
+    let xLen = 0;
+    const series = Object.keys(originDatas).map(name => {
+        xLen = originDatas[name].length;
+        return {
+            data: originDatas[name],
+            type: 'line',
+            smooth: true,
+            name,
+        }
+    });
+
+    const options = {
+        xAxis: {
+            type: 'category',
+            name: '次数',
+            data: range(1, xLen),
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        yAxis: {
+            type: 'value',
+            name: '耗时 ms'
+        },
+        legend: {
+            data: ['wasmUnzip', 'wasmGzip', 'pakoUngzip', 'pakoGzip']
+        },
+        series,
+    }
+
+    return options;
+}
+
+function bindEvents() {
+    btn.addEventListener('click', function() {
+        calc(input.value, runTimesInput.value);
+    });
+}
+
+function calc(num: string, runTimes: string) {
+    const value = parseInt(num, 10);
+    const times = parseInt(runTimes, 10);
+    if (!Number.isNaN(value) && value > 0) {
+        const performanceData = testMain(value, times);
+        const options = generateEchartsData(performanceData);
+        renderChart(options);
     }
 }
+
+function main() {
+    initEcharts();
+    bindEvents();
+    calc(input.value, runTimesInput.value);
+}
+
+main();
