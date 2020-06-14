@@ -10,7 +10,7 @@ const {
 const merge = require('webpack-merge');
 
 module.exports = merge(config, {
-    context: srcFolder,
+    context: demoFolder,
     mode: 'production',
     entry: path.resolve(demoFolder, 'main.ts'),
     output: {

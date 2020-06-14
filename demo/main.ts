@@ -190,7 +190,7 @@ function mockLog() {
     }
 }
 
-function main() {
+win.main = function main() {
     mockLog();
     updateBtnEnable(false);
     initEcharts();
@@ -203,4 +203,4 @@ function main() {
     });
 }
 
-main();
+win.main();

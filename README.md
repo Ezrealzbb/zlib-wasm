@@ -46,4 +46,4 @@ yarn start
 Then visit http://localhost:9000 in your browser tab.
 
 ## License
-MIT & Zlib
+MIT

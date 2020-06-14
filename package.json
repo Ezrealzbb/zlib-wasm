@@ -20,6 +20,7 @@
     "build:web": "npm run clear && ./node_modules/.bin/webpack --config ./bin/webpack.production.config.js",
     "build:ts": "yarn clear && ./node_modules/.bin/tsc -p .",
     "build:demo": "rm -rf demo/dist/* && ./node_modules/.bin/webpack --config ./bin/webpack.demo.config.js",
+    "publish:demo": "./bin/publishDemo.sh",
     "clear": "rm -rf dist/*",
     "start": "node ./bin/server.js"
   },
