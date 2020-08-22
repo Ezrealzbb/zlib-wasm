@@ -31,3 +31,7 @@ export function getMinDivisionNumber(x: number, y: number) {
   const reset = x % y;
   return reset ? x + y - reset : x;
 }
+
+export function noop() {
+  
+}

@@ -1,5 +1,3 @@
-import { ZlibWasmParser } from './web/index';
-
 export * from './web/types';
 
-export const zlib = new ZlibWasmParser({});
+export { gzipPerfTracker, ZlibWasmParser as ZlibWasmProvider } from './web/index';

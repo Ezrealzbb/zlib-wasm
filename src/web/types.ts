@@ -21,19 +21,47 @@ export enum ReturnCodes {
 }
 
 export interface ZlibWasmOptions {
-    debug?: boolean;
+    exCatch: (ex: Error, label) => void;
+    info: (...params: any[]) => void;
+    defaultMemory: number;
 }
 
-export enum TimeRecordLabel {
-    BASE64 = 'BASE64',
+export enum RecordLabel {
+    BASE64 = 'base64',
     WASM_UNGZIP = 'wasm_ungzip',
     PAKO_UNGZIP = 'pako_ungzip',
     WASM_GZIP = 'wasm_gzip',
     PAKO_GZIP = 'pako_gzip',
+    LOAD = 'load',
+    RESET = 'reset',
+    POINTER_FREE = 'pointer_free',
+}
+
+export enum WorkType {
+    Gzip = 'Gzip',
+    UnGzip = 'UnGzip',
+}
+  
+export interface GzipPerfData {
+    length: number;
+    duration: number;
+    timeRatio: number;
+}
+
+export type TrackLabel = RecordLabel | string;
+
+export interface CollectPrefData extends GzipPerfData {
+    workType: WorkType;
+    trackLabel: TrackLabel;
 }
 
 export type TimeRecordMaps = {
-    [key in TimeRecordLabel]: number;
+    [key in RecordLabel]: number;
+}
+
+export interface ExCatchOption {
+    label: RecordLabel;
+    isAsync?: boolean;
 }
 
 export interface InstaceExports extends WebAssembly.Exports {
@@ -49,3 +77,5 @@ export interface InstaceExports extends WebAssembly.Exports {
     _abort: () => void;
     _grow: () => void;
 }
+
+export type AnyFunction = (...args) => any;

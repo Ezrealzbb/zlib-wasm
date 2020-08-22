@@ -1,8 +1,13 @@
-import { zlib } from '../src/index';
+import { ZlibWasmProvider, gzipPerfTracker } from '../src/index';
 import { randomString, calcAvg, checkDiffText } from './util';
 import echarts from 'echarts';
 import { range, isEqual } from 'lodash-es';
 
+const zlib = new ZlibWasmProvider({
+    exCatch: console.error,
+    defaultMemory: 100,
+    info: console.info,
+});
 zlib.setDebug(true);
 
 const win: any = window;
@@ -26,10 +31,9 @@ function testCore(label: string, fn: () => void, time: number) {
     for (let i = 0; i < time; i++) {
         fn();
     }
-    const avg = calcAvg(zlib.timeSet);
+    const avg = calcAvg(gzipPerfTracker.collect().map(c => c.duration));
     // console.log(`[zlibwasm] ${label} avg const time ${avg}`);
 
-    zlib.timeSet.length = 0;
     return +avg.toFixed(3);
 }
 
