@@ -23,3 +23,13 @@ export function checkDiffText(str1: string, str2: string) {
     }
     return true;
 }
+
+export function getAllUnicodeText(start = 0, stop = 0xffff) {
+    // 0x0000 ~ 0xFFFF
+    let str = '{"result": "';
+    for(let i = 0; i <= 0xFFFF; i++) {
+        str += `\\u${i.toString(16).padStart(4, '0')}`;
+    }
+    str+= '"}';
+    return JSON.parse(str).result;
+}

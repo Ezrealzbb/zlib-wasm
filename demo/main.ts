@@ -1,5 +1,5 @@
 import { ZlibWasmProvider, gzipPerfTracker } from '../src/index';
-import { randomString, calcAvg, checkDiffText } from './util';
+import { randomString, calcAvg, checkDiffText, getAllUnicodeText } from './util';
 import echarts from 'echarts';
 import { range, isEqual } from 'lodash-es';
 
@@ -26,13 +26,14 @@ win.chart = null;
 win.testUngzip = testUngzip;
 win.testGzip = testGzip;
 win.testMain = testMain;
-
+win.getAllUnicodeText = getAllUnicodeText;
+win.assertArrayBuffer = assertArrayBuffer;
 function testCore(label: string, fn: () => void, time: number) {
     for (let i = 0; i < time; i++) {
         fn();
     }
     const avg = calcAvg(gzipPerfTracker.collect().map(c => c.duration));
-    // console.log(`[zlibwasm] ${label} avg const time ${avg}`);
+    console.log(`[zlibwasm] ${label} avg const time ${avg}`);
 
     return +avg.toFixed(3);
 }
@@ -49,7 +50,7 @@ function testUngzip(runTimes: number, content: string) {
     }, runTimes);
 
     win.ungzipOutput = wasmRet;
-    console.assert(wasmRet, pakoRet);
+    console.assert(assertArrayBuffer(wasmRet, pakoRet), true);
     return {
         wasmUngipAvg, pakoUngipAvg,
     }
@@ -81,7 +82,8 @@ function testMain(len: number = 1, time: number = 1, innerRunTime : number = 1) 
     const wasmGzip = [];
     const pakoUngzip = [];
     const pakoGzip = [];
-    const content = randomString(len);
+    // const content = randomString(len);
+    const content = getAllUnicodeText();
     for (let i = 0; i < time; i++) {
         const { wasmGzipAvg, pakoGzipAvg } = testGzip(innerRunTime, content);
         wasmGzip.push(wasmGzipAvg);
@@ -94,7 +96,7 @@ function testMain(len: number = 1, time: number = 1, innerRunTime : number = 1) 
         pakoUngzip.push(pakoUngipAvg);
     }
 
-    console.assert(win.ungzipOutput === content);
+    console.assert(assertArrayBuffer(win.ungzipOutput, content), true);
     return {
         wasmUnzip,
         wasmGzip,
@@ -194,6 +196,21 @@ function mockLog() {
     }
 }
 
+function assertArrayBuffer(a: string, b: string) {
+    if (a.length !== b.length) {
+        return false;
+    }
+    const encoder = new window.TextEncoder();
+    const buff1 = encoder.encode(a);
+    const buff2 = encoder.encode(b);
+    for (let i = 0; i < a.length; i++) {
+        if (buff1[i] !== buff2[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 win.main = function main() {
     mockLog();
     updateBtnEnable(false);
@@ -204,6 +221,10 @@ win.main = function main() {
         updateMessage('', true);
         updateBtnEnable(true);
         calc(input.value, runTimesInput.value);
+        const content = getAllUnicodeText();
+        const gzipContent = zlib.pakoGzip(content, 9);
+        const unGzip = zlib.ungzip(gzipContent);
+        console.log('结果', unGzip.length, content.length);
     });
 }
 
