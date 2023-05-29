@@ -22,11 +22,11 @@ const srcdir = path.join(baseRoot, "src");
 const baseDir = path.join(srcdir, 'base');
 const zlibdir = path.join(baseRoot, "lib/zlib");
 
-// LLVM是目前苹果采用的编译器工具链 
+// LLVM是目前苹果采用的编译器工具链
 // Bitcode是LLVM编译器的中间代码的一种编码
 // LLVM的前端可以理解为C/C++/OC/Swift等编程语言,
 // LLVM的后端可以理解为各个芯片平台上的汇编指令或者可执行机器指令数据
-// 
+//
 
 (async () => {
   // generat bitcode file for each source code
@@ -38,7 +38,7 @@ const zlibdir = path.join(baseRoot, "lib/zlib");
     "-D", "WEBASSEMBLY", // define WEBASEEMBLY=1
     "-emit-llvm", // Use the LLVM representation for assembler and object files
     "-nostdinc", // Disable standard #include directories for the C++ standard library
-    "-nostdlib", // 
+    "-nostdlib", //
     "-fno-builtin", // Disable implicit builtin knowledge of functions
     "-isystem", path.join(waCliUtil.basedir, "include"), // Add directory to SYSTEM include search path
     "-isystem", path.join(waCliUtil.basedir, "lib/musl-wasm32/include"),
@@ -106,7 +106,7 @@ const zlibdir = path.join(baseRoot, "lib/zlib");
     "-march=wasm32",
     "-filetype=asm",// 编译成 文本汇编语言 .s 文件
     "-asm-verbose=false", // Add comments to directives
-    "-thread-model=single", // 
+    "-thread-model=single", //
     "-data-sections", // Emit data into separate sections，允许去除无用的 data 和 function，减少体积
     "-function-sections",
   ], { cwd: builddir });

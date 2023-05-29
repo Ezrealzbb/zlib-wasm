@@ -2,8 +2,8 @@ import { ZlibWasmOptions, DeflateLevel } from './types';
 export declare class ZlibWasmParser {
     private memory;
     private instanceExports;
-    private pako;
-    private buff;
+    pako: any;
+    buff: any;
     private loadState;
     private debug;
     private timeMaps;
@@ -36,6 +36,10 @@ export declare class ZlibWasmParser {
      * 释放内存
      */
     private reset;
+    ungzipBuffer(base64Text: string): string | {
+        buffer: ArrayBuffer;
+        result: string;
+    };
     ungzip(base64Text: string): string;
     pakoUngzip(base64Text: string): string;
     gzip(text: string, level?: DeflateLevel): string;

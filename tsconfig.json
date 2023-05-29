@@ -1,27 +1,29 @@
 {
-    "compilerOptions": {
-        "sourceMap": true,
-        "lib": [
-            "DOM",
-            "ESNext",
-        ],
-        "module": "ES6",
-        "target": "ES5",
-        "moduleResolution": "Node",
-        "skipLibCheck": true,
-        "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true,
-        "declaration": true,
-        "outDir": "dist",
-        "typeRoots": [
-            "node_modules/@types",
-        ]
-    },
-    "include": [
-        "src/**/*"
+  "compilerOptions": {
+    "noEmitOnError": false,
+    "allowJs": true,
+    "sourceMap": true,
+    "lib": [
+      "DOM",
+      "ESNext"
     ],
-    "exclude": [
-        "node_modules",
-        "src/*.wasm"
+    "module": "ESnext",
+    "target": "ES5",
+    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "outDir": "dist",
+    "typeRoots": [
+      "node_modules/@types"
     ]
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/*.wasm"
+  ]
 }

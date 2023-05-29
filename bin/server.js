@@ -5,7 +5,7 @@ const serverCfg = require('./dev-server');
 
 
 const compiler = webpack(webpackCfg);
-const devServer = new webpackDevServer(compiler, serverCfg);
+const devServer = new webpackDevServer(webpackCfg.devServer, compiler);
 
 devServer.listen(9000, '0.0.0.0', (err) => {
     if (err) {

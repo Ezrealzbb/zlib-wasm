@@ -9,19 +9,33 @@ const {
 } = require('./webpack.base.config');
 const merge = require('webpack-merge');
 
-module.exports = merge(config, {
-    context: srcFolder,
-    mode: 'development',
-    entry: path.resolve(demoFolder, 'main.ts'),
-    output: {
-        path: distFolder,
-        filename: 'main.bundle.js',
-        webassemblyModuleFilename: "[hash].wasm",
+const devConfig = {
+  context: srcFolder,
+  mode: 'development',
+  entry: path.resolve(demoFolder, 'main.ts'),
+  output: {
+    globalObject: 'this',
+    path: distFolder,
+    filename: 'main.[hash].js',
+    webassemblyModuleFilename: '[hash].wasm',
+    libraryTarget: 'umd',
+  },
+  experiments: {
+    outputModule: false,
+  },
+  devtool: 'inline-source-map',
+  plugins: [
+    new htmlWebpackPlugin({
+      template: path.resolve(demoFolder, 'index.html'),
+    }),
+  ],
+  devServer: {
+    static: {
+      directory: distFolder,
     },
-    devtool: 'inline-source-map',
-    plugins: [
-        new htmlWebpackPlugin({  // 插件的使用： new 调用构造函数，配置项就是构造函数的参数（对象形式的参数）
-            template: path.resolve(demoFolder, 'index.html'),
-        }),
-    ],
-});
+    compress: false,
+    port: 9000,
+  },
+};
+
+module.exports = merge(config, devConfig);

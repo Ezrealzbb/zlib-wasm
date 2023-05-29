@@ -9,13 +9,15 @@ const merge = require('webpack-merge');
 
 module.exports = merge(config, {
     entry: path.resolve(srcFolder, 'index.ts'),
-    devtool: 'srouce-map',
+    devtool: 'source-map',
     mode: 'production',
+
     output: {
-        globalObject: 'this',
+//        globalObject: 'this',
         filename: 'index.js',
         path: distFolder,
-        libraryTarget: 'umd',
+        libraryTarget: 'module',
+        webassemblyModuleFilename: '[contenthash].wasm',
     },
     plugins: [
         // new BundleAnalyzerPlugin(),

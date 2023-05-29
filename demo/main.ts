@@ -1,8 +1,36 @@
-import { zlib } from '../src/index';
+import { ZlibWasmParser } from '../src/web/zlib-wasm-web-demo';
+import { ZlibWasmModule } from '../src/web/zlib-wasm-module';
+
 import { randomString, calcAvg, checkDiffText } from './util';
 import echarts from 'echarts';
 import { range, isEqual } from 'lodash-es';
 
+
+const zlib = new ZlibWasmParser({
+    debug: true,
+});
+
+
+const zlib2 = new ZlibWasmModule({
+    inflationUtils: {
+        // @ts-ignore
+        inflationMethod(base64Text: string) {
+            return zlib.pakoUngzip(base64Text);
+            },
+        // @ts-ignore
+        bufferInflationMethod<T>(base64Text: string) {
+            const buffer = zlib.buff.from(base64Text, 'base64');
+            // @ts-ignore
+            const ret = zlib.pako.ungzip<T>(buffer, { to: 'string' });
+            return {
+                buffer,
+                ret,
+            }
+        }
+    },
+    encoder: new TextEncoder(),
+    decoder: new TextDecoder(),
+});
 zlib.setDebug(true);
 
 const win: any = window;
@@ -14,6 +42,7 @@ const statusBox = document.getElementById('status');
 
 
 win.zlib = zlib;
+win.zlib2 = zlib2;
 win.ungzipOutput = '';
 win.gzipOutput = '';
 win.chart = null;
@@ -65,7 +94,7 @@ function testGzip(runTimes: number, content: string) {
     // 这里不做断言
     // console.assert(wasmRet, pakoRet);
     win.gzipOutput = pakoRet;
-    
+
     return {
         wasmGzipAvg, pakoGzipAvg,
     }
@@ -83,7 +112,7 @@ function testMain(len: number = 1, time: number = 1, innerRunTime : number = 1) 
         wasmGzip.push(wasmGzipAvg);
         pakoGzip.push(pakoGzipAvg);
     }
-    
+
     for (let i = 0; i < time; i++) {
         const { wasmUngipAvg, pakoUngipAvg, } = testUngzip(innerRunTime, win.gzipOutput);
         wasmUnzip.push(wasmUngipAvg);

@@ -19,7 +19,7 @@ export function checkDiffText(str1: string, str2: string) {
         if(str1[i] !== str2[i]) {
             console.log('checkDiffText', i, str1[i], str2[i]);
             return false;
-        } 
+        }
     }
     return true;
 }

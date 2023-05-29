@@ -1,5 +1,2 @@
-import { ZlibWasmParser } from './web/index';
-
 export * from './web/types';
-
-export const zlib = new ZlibWasmParser({});
+export * from './web/zlib-wasm-module';

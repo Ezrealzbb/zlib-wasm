@@ -1,32 +1,30 @@
 import { Buffer } from 'buffer';
 import pako from 'pako';
-import zlibWasm from './zlib.wasm';
+import zlibWasm from './zlib-v1.wasm';
 import { isNative, isWebview, getMinDivisionNumber } from './util';
 import {
   LoadState,
   ZlibWasmOptions,
   InstaceExports,
-  TimeRecordLabel, 
-  DeflateLevel, 
+  TimeRecordLabel,
+  DeflateLevel,
   ReturnCodes,
   Pointer,
   TimeRecordMaps,
 } from './types';
 import { TextDecodeParser, TextEncodeParser } from './TextParser';
 import { isNULLPtr } from './util';
-import { resolve } from 'path';
 
 const DEFAULT_COMPRESSION_LEVEL = 9;
 const DEFAULT_INITIAL_MEMORY_PAGES = 10;
-const NO_ZLIB_HEADER = -1;
 
 export class ZlibWasmParser {
 
   private memory: WebAssembly.Memory;
   private instanceExports: InstaceExports;
   // debug 用
-  private pako;
-  private buff;
+  public pako;
+  public buff;
 
   // 加载状态
   private loadState: LoadState;
@@ -43,7 +41,7 @@ export class ZlibWasmParser {
   private base64InputByteLength: number = 0;
   private base64OutputPtr: Pointer = 0;
   private base64OutputByteLength: number = 0;
-  
+
   private inputPtr: Pointer = 0;
   private inputByteLength: number = 0;
   private outputPtr: Pointer = 0;
@@ -51,7 +49,7 @@ export class ZlibWasmParser {
 
   private loadedPromiseResolver: (instance: ZlibWasmParser) => void;
   public loadedPromise: Promise<ZlibWasmParser>;
-  
+
 
   constructor(options: ZlibWasmOptions) {
     const { debug = false } = options;
@@ -74,10 +72,10 @@ export class ZlibWasmParser {
 
     try {
       this.memory = new WebAssembly.Memory({
-        // 以页(64k) 为单位 
+        // 以页(64k) 为单位
         initial: DEFAULT_INITIAL_MEMORY_PAGES,
       });
-  
+
       const importEnv = {
         memory: this.memory,
         writeToJs: () => { },
@@ -87,12 +85,18 @@ export class ZlibWasmParser {
         _abort: console.error,
         _grow: () => true,
       }
-  
-      const module = await WebAssembly.compile(Buffer.from(zlibWasm, 'base64'));
-      // return;
-      const instance: WebAssembly.Instance = await WebAssembly.instantiate(module, {
+
+//      const module = await WebAssembly.compile(Buffer.from(zlibWasm, 'base64'));
+//      const instance: WebAssembly.Instance = await WebAssembly.instantiate(module, {
+//        env: importEnv,
+//      });
+
+      const response = await fetch(zlibWasm, { credentials: 'same-origin' });
+      const wasmModule = await WebAssembly.instantiateStreaming(response, {
         env: importEnv,
       });
+
+      const instance = wasmModule.instance;
 
       const enable = this.checkEnable(instance);
 
@@ -110,7 +114,7 @@ export class ZlibWasmParser {
     } finally {
       this.reset()
     }
-    
+
   }
 
   private recordBase64(ptr: number, size: number) {
@@ -127,7 +131,7 @@ export class ZlibWasmParser {
   }
 
   /**
-   * 
+   *
    * @param instance 校验 Webassembly compile 结果
    */
   private checkEnable(instance: WebAssembly.Instance | null): boolean {
@@ -148,7 +152,7 @@ export class ZlibWasmParser {
   private timeRecordEnd(label: TimeRecordLabel) {
     if (this.debug && label && this.timeMaps[label]) {
       const constTime = window.performance.now() - this.timeMaps[label];
-      console.log(`[zlibwasm] time performance ${label}: ${ constTime }ms`);
+      console.log(`[zlibwasm] time performance ${label}: ${constTime}ms`);
       this.timeMaps[label] = 0;
       this.timeSet.push(constTime);
     }
@@ -170,7 +174,7 @@ export class ZlibWasmParser {
       this.base64OutputPtr = 0;
       this.base64OutputByteLength = 0;
     }
-    
+
     if (this.inputPtr) {
       this.instanceExports._free(this.inputPtr);
       this.inputPtr = 0;
@@ -183,7 +187,77 @@ export class ZlibWasmParser {
     }
   }
 
-  
+  ungzipBuffer(base64Text: string) {
+    if (!this.isReady()) {
+      return this.pakoUngzip(base64Text);
+    }
+
+    this.timeRecord(TimeRecordLabel.WASM_UNGZIP);
+    this.reset();
+
+    // 将text转换为 ArrayBuffer
+    const textBuff = this.encoder.encode(base64Text);
+
+    // 在线性内存中分配，得到数据指针的起始位置
+    this.base64InputPtr = this.instanceExports._malloc(textBuff.byteLength);
+    this.base64InputByteLength = textBuff.byteLength;
+
+    // 赋值内存
+    const emptyBuff = new Uint8Array(this.memory.buffer, this.base64InputPtr, this.base64InputByteLength);
+    emptyBuff.set(textBuff);
+
+    // 执行base64 解码，得到原始的二进制数据
+    // 解压之后的二进制长度应该是原始长度的 3/4
+    // const outPtr = this.instanceExports._base64_decode(this.base64Ptr, textBuff.byteLength, textBuff.byteLength * (3 / 4));
+    this.base64OutputByteLength = textBuff.byteLength * 3 / 4;
+    this.base64OutputPtr = this.instanceExports._malloc(this.base64OutputByteLength);
+    const decodeRet = this.instanceExports._base64_decode2(this.base64InputPtr, this.base64InputByteLength, this.base64OutputPtr, this.base64OutputByteLength);
+    // console.log('[zlibwasm] decodeRet', decodeRet);
+
+    // 解码失败，走 Buffer的解码
+    if (decodeRet) {
+      const base64DecodeBuff = Buffer.from(base64Text, 'base64');
+      this.inputByteLength = base64DecodeBuff.byteLength;
+      this.inputPtr = this.instanceExports._malloc(this.inputByteLength);
+      new Uint8Array(this.memory.buffer, this.inputPtr, this.inputByteLength).set(base64DecodeBuff);
+    } else {
+      this.inputPtr = this.base64OutputPtr;
+      // 值和 inputPtr 一致，防止在 reset 函数中重复 _free 报错 unreachable
+      this.base64OutputPtr = 0;
+      this.inputByteLength = this.base64OutputByteLength;
+    }
+
+    // 默认传入最大内存
+    this.outputByteLength = this.memory.buffer.byteLength;
+    this.outputPtr = this.instanceExports._malloc(this.outputByteLength);
+
+    if (isNULLPtr(this.inputPtr) || isNULLPtr(this.outputPtr)) {
+      return this.pakoUngzip(base64Text);
+    }
+
+    // 开始解压
+    const ret = this.instanceExports._uncompress_gzip(
+      this.inputPtr,
+      this.inputByteLength,
+      this.outputPtr,
+      this.outputByteLength,
+      );
+
+    if (ret !== ReturnCodes.Z_OK) {
+      console.warn(`[zlibwasm] wasm ungzip fail with code ${ret}, using pako instead`);
+      return this.pakoUngzip(base64Text);
+    }
+
+    const outputBuff = this.memory.buffer.slice(this.outputPtr, this.outputPtr + this.outputByteLength);
+    const base64OutBuff = this.memory.buffer.slice(this.base64OutputPtr, this.base64OutputPtr + this.base64OutputByteLength);
+    const outputText = this.decoder.decode(outputBuff);
+    this.timeRecordEnd(TimeRecordLabel.WASM_UNGZIP);
+    return {
+      buffer: base64OutBuff,
+      result: outputText,
+    };
+  }
+
   ungzip(base64Text: string) {
 
     if (!this.isReady()) {
@@ -195,7 +269,7 @@ export class ZlibWasmParser {
 
     // 将text转换为 ArrayBuffer
     const textBuff = this.encoder.encode(base64Text);
-    
+
     // 在线性内存中分配，得到数据指针的起始位置
     this.base64InputPtr = this.instanceExports._malloc(textBuff.byteLength);
     this.base64InputByteLength = textBuff.byteLength;
@@ -269,7 +343,7 @@ export class ZlibWasmParser {
 
     // 将text转换为 ArrayBuffer
     const textBuff = this.encoder.encode(text);
-    
+
     this.inputByteLength = textBuff.byteLength;
     // 在线性内存中分配，得到数据指针的起始位置
     this.inputPtr = this.instanceExports._malloc(this.inputByteLength);
@@ -346,7 +420,3 @@ export class ZlibWasmParser {
   }
 
 }
-
-
-
-
